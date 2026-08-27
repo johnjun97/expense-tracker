@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import Loading from '../../components/Loading/Loading'
 import './login.css'
+
 
 function Login() {
   const [email, setEmail] = useState('')

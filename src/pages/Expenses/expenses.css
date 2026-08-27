@@ -60,6 +60,50 @@
   gap: 16px;
 }
 
+.expense-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.edit-expense-button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.delete-expense-button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  color: #c00;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.delete-expense-button:hover {
+  background: #f5f5f5;
+}
+
+.delete-expense-button:active {
+  transform: translateY(1px);
+}
+
+.edit-expense-button:hover {
+  background: #f5f5f5;
+}
+
+.edit-expense-button:active {
+  transform: translateY(1px);
+}
+
 .expense-subcategory,
 .expense-date,
 .expense-note {
@@ -76,9 +120,11 @@
   .expense-card-header {
     align-items: flex-start;
   }
-}
 
-@media (max-width: 768px) {
+  .expense-card-actions {
+    gap: 8px;
+  }
+
   .expenses-page {
     padding: 24px 16px;
   }

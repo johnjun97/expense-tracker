@@ -12,6 +12,31 @@ function Expenses() {
 
   const navigate = useNavigate()
 
+  async function handleDelete(expenseId) {
+  const confirmed = window.confirm(
+    'Are you sure you want to delete this expense?'
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  const { error } = await supabase
+    .from('expenses_tracker_expenses')
+    .delete()
+    .eq('id', expenseId)
+
+  if (error) {
+    console.error('Failed to delete expense:', error)
+    setError(error.message)
+    return
+  }
+
+  setExpenses((currentExpenses) =>
+    currentExpenses.filter((expense) => expense.id !== expenseId)
+  )
+}
+
   useEffect(() => {
     async function loadExpenses() {
       const { data, error } = await supabase
@@ -76,12 +101,29 @@ function Expenses() {
           <div className="expense-list">
             {expenses.map((expense) => (
               <div className="expense-card" key={expense.id}>
+
                 <div className="expense-card-header">
                   <strong>{expense.category}</strong>
 
-                  <strong>
-                    RM {Number(expense.amount).toFixed(2)}
-                  </strong>
+<div className="expense-card-actions">
+  <strong>
+    RM {Number(expense.amount).toFixed(2)}
+  </strong>
+
+  <button
+    className="edit-expense-button"
+    onClick={() => navigate(`/expenses/edit/${expense.id}`)}
+  >
+    Edit
+  </button>
+
+  <button
+    className="delete-expense-button"
+    onClick={() => handleDelete(expense.id)}
+  >
+    Delete
+  </button>
+</div>
                 </div>
 
                 {expense.subcategory && (

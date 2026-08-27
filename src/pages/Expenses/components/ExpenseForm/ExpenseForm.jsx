@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../../../lib/supabase'
 import './ExpenseForm.css'
 
@@ -12,7 +12,10 @@ const categories = [
   'Other',
 ]
 
-function ExpenseForm({ onExpenseAdded }) {
+function ExpenseForm({
+  expense = null,
+  onExpenseSaved,
+}) {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [subcategory, setSubcategory] = useState('')
@@ -22,6 +25,20 @@ function ExpenseForm({ onExpenseAdded }) {
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const isEditMode = Boolean(expense)
+
+  useEffect(() => {
+    if (!expense) {
+      return
+    }
+
+    setAmount(expense.amount ?? '')
+    setCategory(expense.category ?? '')
+    setSubcategory(expense.subcategory ?? '')
+    setExpenseDate(expense.expense_date ?? '')
+    setNote(expense.note ?? '')
+  }, [expense])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -39,44 +56,70 @@ function ExpenseForm({ onExpenseAdded }) {
       return
     }
 
-    const { data, error } = await supabase
-      .from('expenses_tracker_expenses')
-      .insert({
-        user_id: user.id,
-        amount: Number(amount),
-        category,
-        subcategory: subcategory || null,
-        expense_date: expenseDate,
-        note: note || null,
-      })
-      .select()
-      .single()
+    const expenseData = {
+      amount: Number(amount),
+      category,
+      subcategory: subcategory || null,
+      expense_date: expenseDate,
+      note: note || null,
+    }
 
-    if (error) {
-      console.error('Failed to add expense:', error)
-      setError(error.message)
+    let data
+    let saveError
+
+    if (isEditMode) {
+      const result = await supabase
+        .from('expenses_tracker_expenses')
+        .update(expenseData)
+        .eq('id', expense.id)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+      data = result.data
+      saveError = result.error
+    } else {
+      const result = await supabase
+        .from('expenses_tracker_expenses')
+        .insert({
+          user_id: user.id,
+          ...expenseData,
+        })
+        .select()
+        .single()
+
+      data = result.data
+      saveError = result.error
+    }
+
+    if (saveError) {
+      console.error(
+        isEditMode
+          ? 'Failed to update expense:'
+          : 'Failed to add expense:',
+        saveError
+      )
+
+      setError(saveError.message)
       setLoading(false)
       return
     }
 
-    console.log('Expense added:', data)
-
-    setAmount('')
-    setCategory('')
-    setSubcategory('')
-    setExpenseDate(new Date().toISOString().split('T')[0])
-    setNote('')
+    console.log(
+      isEditMode ? 'Expense updated:' : 'Expense added:',
+      data
+    )
 
     setLoading(false)
 
-    if (onExpenseAdded) {
-      onExpenseAdded(data)
+    if (onExpenseSaved) {
+      onExpenseSaved(data)
     }
   }
 
   return (
     <div className="expense-form">
-      <h2>Add Expense</h2>
+      <h2>{isEditMode ? 'Edit Expense' : 'Add Expense'}</h2>
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -144,10 +187,18 @@ function ExpenseForm({ onExpenseAdded }) {
           />
         </div>
 
-        {error && <p className="expense-form-error">{error}</p>}
+        {error && (
+          <p className="expense-form-error">
+            {error}
+          </p>
+        )}
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : 'Add Expense'}
+          {loading
+            ? 'Saving...'
+            : isEditMode
+              ? 'Save Changes'
+              : 'Add Expense'}
         </button>
       </form>
     </div>
