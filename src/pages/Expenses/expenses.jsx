@@ -9,33 +9,49 @@ function Expenses() {
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
 
   const navigate = useNavigate()
 
   async function handleDelete(expenseId) {
-  const confirmed = window.confirm(
-    'Are you sure you want to delete this expense?'
-  )
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this expense?'
+    )
 
-  if (!confirmed) {
-    return
+    if (!confirmed) {
+      return
+    }
+
+    const { error } = await supabase
+      .from('expenses_tracker_expenses')
+      .delete()
+      .eq('id', expenseId)
+
+    if (error) {
+      console.error('Failed to delete expense:', error)
+      setError(error.message)
+      return
+    }
+
+    setExpenses((currentExpenses) =>
+      currentExpenses.filter((expense) => expense.id !== expenseId)
+    )
   }
 
-  const { error } = await supabase
-    .from('expenses_tracker_expenses')
-    .delete()
-    .eq('id', expenseId)
+  const filteredExpenses = expenses.filter((expense) => {
+    const searchText = search.toLowerCase()
 
-  if (error) {
-    console.error('Failed to delete expense:', error)
-    setError(error.message)
-    return
-  }
+    const matchesSearch =
+      expense.category?.toLowerCase().includes(searchText) ||
+      expense.subcategory?.toLowerCase().includes(searchText) ||
+      expense.note?.toLowerCase().includes(searchText)
 
-  setExpenses((currentExpenses) =>
-    currentExpenses.filter((expense) => expense.id !== expenseId)
-  )
-}
+    const matchesCategory =
+      !categoryFilter || expense.category === categoryFilter
+
+    return matchesSearch && matchesCategory
+  })
 
   useEffect(() => {
     async function loadExpenses() {
@@ -95,35 +111,58 @@ function Expenses() {
           </button>
         </div>
 
-        {expenses.length === 0 ? (
-          <p>No expenses recorded yet.</p>
+        <div className="expenses-filters">
+          <input
+            type="search"
+            placeholder="Search expenses..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+
+          <select
+            value={categoryFilter}
+            onChange={(event) => setCategoryFilter(event.target.value)}
+          >
+            <option value="">All categories</option>
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Bills">Bills</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Health">Health</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        {filteredExpenses.length === 0 ? (
+          <p>No matching expenses found.</p>
         ) : (
           <div className="expense-list">
-            {expenses.map((expense) => (
+            {filteredExpenses.map((expense) => (
               <div className="expense-card" key={expense.id}>
 
                 <div className="expense-card-header">
                   <strong>{expense.category}</strong>
 
-<div className="expense-card-actions">
-  <strong>
-    RM {Number(expense.amount).toFixed(2)}
-  </strong>
+                  <div className="expense-card-actions">
+                    <strong>
+                      RM {Number(expense.amount).toFixed(2)}
+                    </strong>
 
-  <button
-    className="edit-expense-button"
-    onClick={() => navigate(`/expenses/edit/${expense.id}`)}
-  >
-    Edit
-  </button>
+                    <button
+                      className="edit-expense-button"
+                      onClick={() => navigate(`/expenses/edit/${expense.id}`)}
+                    >
+                      Edit
+                    </button>
 
-  <button
-    className="delete-expense-button"
-    onClick={() => handleDelete(expense.id)}
-  >
-    Delete
-  </button>
-</div>
+                    <button
+                      className="delete-expense-button"
+                      onClick={() => handleDelete(expense.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
 
                 {expense.subcategory && (

@@ -15,6 +15,7 @@ const categories = [
 function ExpenseForm({
   expense = null,
   onExpenseSaved,
+  onCancel,
 }) {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
@@ -118,8 +119,20 @@ function ExpenseForm({
   }
 
   return (
-    <div className="expense-form">
-      <h2>{isEditMode ? 'Edit Expense' : 'Add Expense'}</h2>
+<div className="expense-form">
+  <div className="expense-form-header">
+    <h2>{isEditMode ? 'Edit Expense' : 'Add Expense'}</h2>
+
+    {isEditMode && onCancel && (
+      <button
+        type="button"
+        className="back-button"
+        onClick={onCancel}
+      >
+        Back
+      </button>
+    )}
+  </div>
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">

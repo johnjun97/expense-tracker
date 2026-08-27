@@ -75,9 +75,11 @@ function EditExpense() {
       <Navbar />
 
       <div className="expenses-page">
+
         <ExpenseForm
           expense={expense}
           onExpenseSaved={handleExpenseSaved}
+          onCancel={() => navigate('/expenses')}
         />
       </div>
     </>

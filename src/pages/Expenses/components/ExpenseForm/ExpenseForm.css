@@ -14,6 +14,40 @@
   font-size: 20px;
 }
 
+.expense-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.expense-form-header h2 {
+  margin: 0;
+}
+
+.expense-form-header .back-button {
+  width: auto;
+  margin: 0;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  color: #555;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.expense-form-header .back-button:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.expense-form-header .back-button:active {
+  transform: translateY(1px);
+}
+
 .expense-form form {
   display: flex;
   flex-direction: column;
