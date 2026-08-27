@@ -1,8 +1,17 @@
 .navbar {
+  --navbar-height: 65px;
+
+  position: relative;
+  z-index: 1100;
+
+  height: var(--navbar-height);
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 16px 24px;
+
   background: white;
   border-bottom: 1px solid #ddd;
 }
@@ -37,8 +46,12 @@
 
 @media (max-width: 768px) {
   .navbar {
+    --navbar-height: 100px;
+
     flex-direction: column;
+    justify-content: center;
     gap: 12px;
+
     padding: 12px 16px;
   }
 

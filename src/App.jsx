@@ -4,6 +4,8 @@ import { supabase } from './lib/supabase'
 
 import Login from './pages/Login/login.jsx'
 import Home from './pages/Home/home.jsx'
+import Expenses from './pages/Expenses/expenses.jsx'
+import AddExpense from './pages/Expenses/AddExpense'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -50,6 +52,17 @@ function App() {
           path="/"
           element={session ? <Home /> : <Navigate to="/login" replace />}
         />
+
+        <Route
+          path="/expenses"
+          element={session ? <Expenses /> : <Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="/expenses/add"
+          element={session ? <AddExpense /> : <Navigate to="/login" replace />}
+        />
+
       </Routes>
     </BrowserRouter>
   )
