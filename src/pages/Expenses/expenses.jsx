@@ -1,9 +1,11 @@
+import { formatDate } from '../../utils/formatDate'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Navbar/Navbar'
 import Loading from '../../components/Loading/Loading'
 import './expenses.css'
+
 
 function Expenses() {
   const [expenses, setExpenses] = useState([])
@@ -43,10 +45,7 @@ function Expenses() {
   const filteredExpenses = expenses.filter((expense) => {
     const searchText = search.toLowerCase()
 
-    const formattedDate = expense.expense_date
-      ? new Date(`${expense.expense_date}T00:00:00`)
-        .toLocaleDateString('en-GB')
-      : ''
+const formattedDate = formatDate(expense.expense_date)
 
     const amountText = Number(expense.amount).toFixed(2)
 
@@ -203,9 +202,7 @@ function Expenses() {
                 )}
 
                 <p className="expense-date">
-                  {expense.expense_date
-                    ? new Date(`${expense.expense_date}T00:00:00`).toLocaleDateString('en-GB')
-                    : ''}
+{formatDate(expense.expense_date)}
                 </p>
 
                 {expense.note && (
