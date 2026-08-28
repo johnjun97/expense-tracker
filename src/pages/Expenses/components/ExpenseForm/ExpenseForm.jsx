@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../../../lib/supabase'
 import './ExpenseForm.css'
+import { formatDate } from '../../../../utils/formatDate'
 
 function ExpenseForm({
   expense = null,
@@ -17,7 +18,7 @@ function ExpenseForm({
   const [subcategorySuggestions, setSubcategorySuggestions] = useState([])
   const [subcategoryOpen, setSubcategoryOpen] = useState(false)
   const [expenseDate, setExpenseDate] = useState(
-    new Date().toISOString().split('T')[0]
+    new Date().toLocaleDateString('en-GB')
   )
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,7 +34,11 @@ function ExpenseForm({
     setAmount(expense.amount ?? '')
     setCategory(expense.category ?? '')
     setSubcategory(expense.subcategory ?? '')
-    setExpenseDate(expense.expense_date ?? '')
+    setExpenseDate(
+      expense.expense_date
+        ? formatDate(expense.expense_date)
+        : ''
+    )
     setNote(expense.note ?? '')
   }, [expense])
 
@@ -169,11 +174,13 @@ function ExpenseForm({
       return
     }
 
+    const [day, month, year] = expenseDate.split('/')
+
     const expenseData = {
       amount: Number(amount),
       category,
       subcategory: subcategory || null,
-      expense_date: expenseDate,
+      expense_date: `${year}-${month}-${day}`,
       note: note || null,
     }
 
@@ -376,9 +383,10 @@ function ExpenseForm({
           <label htmlFor="expense-date">Date</label>
           <input
             id="expense-date"
-            type="date"
+            type="text"
             value={expenseDate}
             onChange={(event) => setExpenseDate(event.target.value)}
+            placeholder="DD/MM/YYYY"
             required
           />
         </div>
