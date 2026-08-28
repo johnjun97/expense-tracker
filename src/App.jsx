@@ -8,6 +8,7 @@ import Expenses from './pages/Expenses/expenses.jsx'
 import AddExpense from './pages/Expenses/AddExpense.jsx'
 import EditExpense from './pages/Expenses/EditExpense.jsx'
 import Charts from './pages/Charts/charts.jsx'
+import Loading from './components/Loading/Loading.jsx'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -38,9 +39,9 @@ function App() {
     }
   }, [])
 
-  if (loading) {
-    return <p>Loading...</p>
-  }
+if (loading) {
+  return <Loading />
+}
 
   return (
     <BrowserRouter>
