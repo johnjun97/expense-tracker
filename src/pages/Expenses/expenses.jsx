@@ -1,9 +1,9 @@
-import { formatDate } from '../../utils/formatDate'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Navbar/Navbar'
 import Loading from '../../components/Loading/Loading'
+import { formatDate } from '../../utils/formatDate'
 import './expenses.css'
 
 
@@ -45,7 +45,15 @@ function Expenses() {
   const filteredExpenses = expenses.filter((expense) => {
     const searchText = search.toLowerCase()
 
-const formattedDate = formatDate(expense.expense_date)
+    const formattedDate = expense.expense_date
+      ? formatDate(expense.expense_date)
+      : ''
+
+    const dateParts = expense.expense_date?.split('-') || []
+
+    const searchableDate = dateParts.length === 3
+      ? `${Number(dateParts[2])}/${Number(dateParts[1])}/${dateParts[0]}`
+      : ''
 
     const amountText = Number(expense.amount).toFixed(2)
 
@@ -54,7 +62,8 @@ const formattedDate = formatDate(expense.expense_date)
       expense.subcategory?.toLowerCase().includes(searchText) ||
       expense.note?.toLowerCase().includes(searchText) ||
       amountText.includes(searchText) ||
-      formattedDate.includes(searchText)
+      formattedDate.includes(searchText) ||
+      searchableDate.includes(searchText)
 
     const matchesCategory =
       !categoryFilter || expense.category === categoryFilter
@@ -202,7 +211,7 @@ const formattedDate = formatDate(expense.expense_date)
                 )}
 
                 <p className="expense-date">
-{formatDate(expense.expense_date)}
+                  {formatDate(expense.expense_date)}
                 </p>
 
                 {expense.note && (
