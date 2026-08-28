@@ -41,5 +41,20 @@
 
 .chart-container {
   width: 100%;
-  height: 350px;
+  height: 320px;
+}
+
+@media (max-width: 600px) {
+  .charts-page {
+    padding: 12px;
+  }
+
+  .charts-summary,
+  .chart-card {
+    padding: 16px;
+  }
+
+  .chart-container {
+    height: 300px;
+  }
 }

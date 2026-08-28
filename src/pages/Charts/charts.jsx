@@ -105,7 +105,7 @@ function Charts() {
           <h2>Spending by Category</h2>
 
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height={350}>
+<ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={categorySpending}
@@ -113,7 +113,7 @@ function Charts() {
                   nameKey="category"
                   cx="50%"
                   cy="50%"
-                  outerRadius={120}
+outerRadius={120}
                   label={({ value }) => `RM ${Number(value).toFixed(2)}`}
                 >
                   {categorySpending.map((entry, index) => (
