@@ -1,16 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../../../lib/supabase'
 import './ExpenseForm.css'
-
-const categories = [
-  'Food',
-  'Transport',
-  'Bills',
-  'Shopping',
-  'Entertainment',
-  'Health',
-  'Other',
-]
 
 function ExpenseForm({
   expense = null,
@@ -19,7 +9,13 @@ function ExpenseForm({
 }) {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
+  const [categorySuggestions, setCategorySuggestions] = useState([])
+  const [categoryOpen, setCategoryOpen] = useState(false)
+  const categoryRef = useRef(null)
+  const subcategoryRef = useRef(null)
   const [subcategory, setSubcategory] = useState('')
+  const [subcategorySuggestions, setSubcategorySuggestions] = useState([])
+  const [subcategoryOpen, setSubcategoryOpen] = useState(false)
   const [expenseDate, setExpenseDate] = useState(
     new Date().toISOString().split('T')[0]
   )
@@ -40,6 +36,122 @@ function ExpenseForm({
     setExpenseDate(expense.expense_date ?? '')
     setNote(expense.note ?? '')
   }, [expense])
+
+  useEffect(() => {
+    async function loadCategorySuggestions() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('expenses_tracker_expenses')
+        .select('category, expense_date')
+        .eq('user_id', user.id)
+        .not('category', 'is', null)
+        .order('expense_date', { ascending: false })
+
+      if (error) {
+        console.error('Failed to load category suggestions:', error)
+        return
+      }
+
+      const uniqueCategories = []
+      const seen = new Set()
+
+      for (const expense of data) {
+        const category = expense.category.trim()
+
+        if (!category || seen.has(category.toLowerCase())) {
+          continue
+        }
+
+        seen.add(category.toLowerCase())
+        uniqueCategories.push(category)
+      }
+
+      setCategorySuggestions(uniqueCategories)
+    }
+
+    loadCategorySuggestions()
+  }, [])
+
+  useEffect(() => {
+    async function loadSubcategorySuggestions() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user || !category.trim()) {
+        setSubcategorySuggestions([])
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('expenses_tracker_expenses')
+        .select('subcategory, expense_date')
+        .eq('user_id', user.id)
+        .eq('category', category.trim())
+        .not('subcategory', 'is', null)
+        .order('expense_date', { ascending: false })
+
+      if (error) {
+        console.error(
+          'Failed to load subcategory suggestions:',
+          error
+        )
+        return
+      }
+
+      const uniqueSubcategories = []
+      const seen = new Set()
+
+      for (const expense of data) {
+        const subcategory = expense.subcategory?.trim()
+
+        if (
+          !subcategory ||
+          seen.has(subcategory.toLowerCase())
+        ) {
+          continue
+        }
+
+        seen.add(subcategory.toLowerCase())
+        uniqueSubcategories.push(subcategory)
+      }
+
+      setSubcategorySuggestions(uniqueSubcategories)
+    }
+
+    loadSubcategorySuggestions()
+  }, [category])
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        categoryRef.current &&
+        !categoryRef.current.contains(event.target)
+      ) {
+        setCategoryOpen(false)
+      }
+
+      if (
+        subcategoryRef.current &&
+        !subcategoryRef.current.contains(event.target)
+      ) {
+        setSubcategoryOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -119,20 +231,20 @@ function ExpenseForm({
   }
 
   return (
-<div className="expense-form">
-  <div className="expense-form-header">
-    <h2>{isEditMode ? 'Edit Expense' : 'Add Expense'}</h2>
+    <div className="expense-form">
+      <div className="expense-form-header">
+        <h2>{isEditMode ? 'Edit Expense' : 'Add Expense'}</h2>
 
-    {isEditMode && onCancel && (
-      <button
-        type="button"
-        className="back-button"
-        onClick={onCancel}
-      >
-        Back
-      </button>
-    )}
-  </div>
+        {onCancel && (
+          <button
+            type="button"
+            className="back-button"
+            onClick={onCancel}
+          >
+            Back
+          </button>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -151,31 +263,113 @@ function ExpenseForm({
 
         <div className="form-group">
           <label htmlFor="category">Category</label>
-          <select
-            id="category"
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            required
-          >
-            <option value="">Select category</option>
 
-            {categories.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
+          <div className="category-dropdown" ref={categoryRef}>
+            <input
+              id="category"
+              type="text"
+              value={category}
+              autoComplete="off"
+              onChange={(event) => {
+                setCategory(event.target.value)
+                setSubcategory('')
+                setSubcategoryOpen(false)
+                setCategoryOpen(true)
+              }}
+              onFocus={() => setCategoryOpen(true)}
+              placeholder="Enter category"
+              required
+            />
+
+            {categoryOpen && (
+              <div className="category-dropdown-menu">
+                {categorySuggestions
+                  .filter((item) =>
+                    item.toLowerCase().includes(category.toLowerCase())
+                  )
+                  .map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="category-dropdown-item"
+                      onClick={() => {
+                        setCategory(item)
+                        setSubcategory('')
+                        setSubcategoryOpen(false)
+                        setCategoryOpen(false)
+                      }}
+                    >
+                      {item}
+                    </button>
+                  ))}
+
+                {categorySuggestions.filter((item) =>
+                  item.toLowerCase().includes(category.toLowerCase())
+                ).length === 0 && !category && (
+                    <div className="category-dropdown-empty">
+                      No suggestions yet
+                    </div>
+                  )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="form-group">
           <label htmlFor="subcategory">Subcategory</label>
-          <input
-            id="subcategory"
-            type="text"
-            value={subcategory}
-            onChange={(event) => setSubcategory(event.target.value)}
-            placeholder="Optional"
-          />
+
+          <div className="category-dropdown" ref={subcategoryRef}>
+            <input
+              id="subcategory"
+              type="text"
+              value={subcategory}
+              onChange={(event) => {
+                setSubcategory(event.target.value)
+                setSubcategoryOpen(true)
+              }}
+              onFocus={() => {
+                if (category.trim()) {
+                  setSubcategoryOpen(true)
+                }
+              }}
+              placeholder={category ? 'Optional' : 'Select category first'}
+              disabled={!category.trim()}
+            />
+
+            {subcategoryOpen && category.trim() && (
+              <div className="category-dropdown-menu">
+                {subcategorySuggestions
+                  .filter((item) =>
+                    item
+                      .toLowerCase()
+                      .includes(subcategory.toLowerCase())
+                  )
+                  .map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="category-dropdown-item"
+                      onClick={() => {
+                        setSubcategory(item)
+                        setSubcategoryOpen(false)
+                      }}
+                    >
+                      {item}
+                    </button>
+                  ))}
+
+                {subcategorySuggestions.filter((item) =>
+                  item
+                    .toLowerCase()
+                    .includes(subcategory.toLowerCase())
+                ).length === 0 && !subcategory && (
+                    <div className="category-dropdown-empty">
+                      No suggestions yet
+                    </div>
+                  )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="form-group">

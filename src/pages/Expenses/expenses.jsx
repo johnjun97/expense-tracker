@@ -11,6 +11,7 @@ function Expenses() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [categorySuggestions, setCategorySuggestions] = useState([])
 
   const navigate = useNavigate()
 
@@ -42,10 +43,19 @@ function Expenses() {
   const filteredExpenses = expenses.filter((expense) => {
     const searchText = search.toLowerCase()
 
+    const formattedDate = expense.expense_date
+      ? new Date(`${expense.expense_date}T00:00:00`)
+        .toLocaleDateString('en-GB')
+      : ''
+
+    const amountText = Number(expense.amount).toFixed(2)
+
     const matchesSearch =
       expense.category?.toLowerCase().includes(searchText) ||
       expense.subcategory?.toLowerCase().includes(searchText) ||
-      expense.note?.toLowerCase().includes(searchText)
+      expense.note?.toLowerCase().includes(searchText) ||
+      amountText.includes(searchText) ||
+      formattedDate.includes(searchText)
 
     const matchesCategory =
       !categoryFilter || expense.category === categoryFilter
@@ -68,6 +78,28 @@ function Expenses() {
       }
 
       setExpenses(data)
+
+      const uniqueCategories = []
+      const seen = new Set()
+
+      for (const expense of data) {
+        const category = expense.category?.trim()
+
+        if (!category) {
+          continue
+        }
+
+        const key = category.toLowerCase()
+
+        if (seen.has(key)) {
+          continue
+        }
+
+        seen.add(key)
+        uniqueCategories.push(category)
+      }
+
+      setCategorySuggestions(uniqueCategories)
       setLoading(false)
     }
 
@@ -124,13 +156,12 @@ function Expenses() {
             onChange={(event) => setCategoryFilter(event.target.value)}
           >
             <option value="">All categories</option>
-            <option value="Food">Food</option>
-            <option value="Transport">Transport</option>
-            <option value="Bills">Bills</option>
-            <option value="Shopping">Shopping</option>
-            <option value="Entertainment">Entertainment</option>
-            <option value="Health">Health</option>
-            <option value="Other">Other</option>
+
+            {categorySuggestions.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -172,7 +203,9 @@ function Expenses() {
                 )}
 
                 <p className="expense-date">
-                  {expense.expense_date}
+                  {expense.expense_date
+                    ? new Date(`${expense.expense_date}T00:00:00`).toLocaleDateString('en-GB')
+                    : ''}
                 </p>
 
                 {expense.note && (

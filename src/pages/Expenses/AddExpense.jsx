@@ -14,7 +14,10 @@ function AddExpense() {
       <Navbar />
 
       <div className="expenses-page">
-        <ExpenseForm onExpenseAdded={handleExpenseAdded} />
+<ExpenseForm
+  onExpenseSaved={handleExpenseAdded}
+  onCancel={() => navigate('/expenses')}
+/>
       </div>
     </>
   )

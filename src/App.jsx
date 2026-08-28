@@ -7,6 +7,7 @@ import Home from './pages/Home/home.jsx'
 import Expenses from './pages/Expenses/expenses.jsx'
 import AddExpense from './pages/Expenses/AddExpense.jsx'
 import EditExpense from './pages/Expenses/EditExpense.jsx'
+import Charts from './pages/Charts/charts.jsx'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -69,6 +70,10 @@ function App() {
           element={session ? <EditExpense /> : <Navigate to="/login" replace />}
         />
 
+        <Route
+          path="/charts"
+          element={session ? <Charts /> : <Navigate to="/login" replace />}
+        />
       </Routes>
     </BrowserRouter>
   )
