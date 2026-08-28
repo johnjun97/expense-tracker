@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../../../lib/supabase'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import './ExpenseForm.css'
-import { formatDate } from '../../../../utils/formatDate'
 
 function ExpenseForm({
   expense = null,
@@ -17,9 +18,7 @@ function ExpenseForm({
   const [subcategory, setSubcategory] = useState('')
   const [subcategorySuggestions, setSubcategorySuggestions] = useState([])
   const [subcategoryOpen, setSubcategoryOpen] = useState(false)
-  const [expenseDate, setExpenseDate] = useState(
-    new Date().toLocaleDateString('en-GB')
-  )
+const [expenseDate, setExpenseDate] = useState(new Date())
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -34,11 +33,11 @@ function ExpenseForm({
     setAmount(expense.amount ?? '')
     setCategory(expense.category ?? '')
     setSubcategory(expense.subcategory ?? '')
-    setExpenseDate(
-      expense.expense_date
-        ? formatDate(expense.expense_date)
-        : ''
-    )
+setExpenseDate(
+  expense.expense_date
+    ? new Date(`${expense.expense_date}T00:00:00`)
+    : null
+)
     setNote(expense.note ?? '')
   }, [expense])
 
@@ -174,15 +173,15 @@ function ExpenseForm({
       return
     }
 
-    const [day, month, year] = expenseDate.split('/')
-
-    const expenseData = {
-      amount: Number(amount),
-      category,
-      subcategory: subcategory || null,
-      expense_date: `${year}-${month}-${day}`,
-      note: note || null,
-    }
+const expenseData = {
+  amount: Number(amount),
+  category,
+  subcategory: subcategory || null,
+  expense_date: expenseDate
+    ? expenseDate.toISOString().split('T')[0]
+    : null,
+  note: note || null,
+}
 
     let data
     let saveError
@@ -381,14 +380,14 @@ function ExpenseForm({
 
         <div className="form-group">
           <label htmlFor="expense-date">Date</label>
-          <input
-            id="expense-date"
-            type="text"
-            value={expenseDate}
-            onChange={(event) => setExpenseDate(event.target.value)}
-            placeholder="DD/MM/YYYY"
-            required
-          />
+<DatePicker
+  id="expense-date"
+  selected={expenseDate}
+  onChange={(date) => setExpenseDate(date)}
+  dateFormat="dd/MM/yyyy"
+  placeholderText="DD/MM/YYYY"
+  required
+/>
         </div>
 
         <div className="form-group">

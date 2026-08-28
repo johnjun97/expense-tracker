@@ -89,7 +89,7 @@
   resize: vertical;
 }
 
-.expense-form button {
+.expense-form > form > button {
   width: 100%;
   padding: 11px 16px;
   border: 1px solid #333;
@@ -100,11 +100,11 @@
   cursor: pointer;
 }
 
-.expense-form button:hover {
+.expense-form > form > button:hover {
   background: #222;
 }
 
-.expense-form button:disabled {
+.expense-form > form > button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
