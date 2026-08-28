@@ -105,17 +105,21 @@ function Charts() {
           <h2>Spending by Category</h2>
 
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
-                  data={categorySpending}
-                  dataKey="amount"
-                  nameKey="category"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={120}
-                  label={({ value }) => `RM ${Number(value).toFixed(2)}`}
-                >
+<Pie
+  data={categorySpending}
+  dataKey="amount"
+  nameKey="category"
+  cx="50%"
+  cy="45%"
+  outerRadius={120}
+  label={({ value }) => {
+    const percentage = (Number(value) / totalSpending) * 100
+
+    return `RM ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`
+  }}
+>
                   {categorySpending.map((entry, index) => (
                     <Cell
                       key={entry.category}
@@ -142,7 +146,49 @@ function Charts() {
 
                 <Legend />
               </PieChart>
+              
             </ResponsiveContainer>
+            <div className="mobile-category-list">
+  {categorySpending.map((entry, index) => {
+    const percentage =
+      (Number(entry.amount) / totalSpending) * 100
+
+    return (
+      <div
+        className="mobile-category-item"
+        key={entry.category}
+      >
+        <span
+          className="mobile-category-indicator"
+          style={{
+            background: [
+              '#0088FE',
+              '#00C49F',
+              '#FFBB28',
+              '#FF8042',
+              '#8884D8',
+              '#82CA9D',
+              '#FF6666',
+              '#A4DE6C',
+            ][index % 8],
+          }}
+        />
+
+        <span className="mobile-category-name">
+          {entry.category}
+        </span>
+
+        <span className="mobile-category-amount">
+          RM {Number(entry.amount).toFixed(2)}
+        </span>
+
+        <span className="mobile-category-percentage">
+          {percentage.toFixed(1)}%
+        </span>
+      </div>
+    )
+  })}
+</div>
           </div>
         </div>
       </div>
