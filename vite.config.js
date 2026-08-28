@@ -7,16 +7,16 @@ export default defineConfig({
     react(),
 
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
 
       manifest: {
         name: 'Expense Tracker',
         short_name: 'Expenses',
-        description: 'Expense Tracker',
-        start_url: '/',
-        display: 'standalone',
+        description: 'Personal expense tracker',
         theme_color: '#ffffff',
         background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
       },
     }),
   ],
