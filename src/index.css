@@ -20,3 +20,18 @@ select {
 button {
   cursor: pointer;
 }
+
+@media (max-width: 768px) {
+  html,
+  body,
+  #root {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  input,
+  textarea {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
