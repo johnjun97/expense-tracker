@@ -17,6 +17,20 @@ function Charts() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 600)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
   useEffect(() => {
     async function loadExpenses() {
       const { data, error } = await supabase
@@ -105,90 +119,98 @@ function Charts() {
           <h2>Spending by Category</h2>
 
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-<Pie
-  data={categorySpending}
-  dataKey="amount"
-  nameKey="category"
-  cx="50%"
-  cy="45%"
-  outerRadius={120}
-  label={({ value }) => {
-    const percentage = (Number(value) / totalSpending) * 100
+            <div className="pie-chart">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categorySpending}
+                    dataKey="amount"
+                    nameKey="category"
+                    cx="50%"
+                    cy="45%"
+                    outerRadius={120}
+                    label={
+                      isMobile
+                        ? false
+                        : ({ value }) => {
+                          const percentage = (Number(value) / totalSpending) * 100
 
-    return `RM ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`
-  }}
->
-                  {categorySpending.map((entry, index) => (
-                    <Cell
-                      key={entry.category}
-                      fill={[
-                        '#0088FE',
-                        '#00C49F',
-                        '#FFBB28',
-                        '#FF8042',
-                        '#8884D8',
-                        '#82CA9D',
-                        '#FF6666',
-                        '#A4DE6C',
-                      ][index % 8]}
-                    />
-                  ))}
-                </Pie>
+                          return `RM ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`
+                        }
+                    }
+                    className="desktop-pie"
+                  >
+                    {categorySpending.map((entry, index) => (
+                      <Cell
+                        key={entry.category}
+                        fill={[
+                          '#0088FE',
+                          '#00C49F',
+                          '#FFBB28',
+                          '#FF8042',
+                          '#8884D8',
+                          '#82CA9D',
+                          '#FF6666',
+                          '#A4DE6C',
+                        ][index % 8]}
+                      />
+                    ))}
+                  </Pie>
 
-                <Tooltip
-                  formatter={(value, name) => [
-                    `RM ${Number(value).toFixed(2)}`,
-                    name,
-                  ]}
-                />
+                  <Tooltip
+                    formatter={(value, name) => [
+                      `RM ${Number(value).toFixed(2)}`,
+                      name,
+                    ]}
+                  />
 
-                <Legend />
-              </PieChart>
-              
-            </ResponsiveContainer>
+                  <Legend />
+                </PieChart>
+
+              </ResponsiveContainer>
+            </div>
+
             <div className="mobile-category-list">
-  {categorySpending.map((entry, index) => {
-    const percentage =
-      (Number(entry.amount) / totalSpending) * 100
+              {categorySpending.map((entry, index) => {
+                const percentage =
+                  (Number(entry.amount) / totalSpending) * 100
 
-    return (
-      <div
-        className="mobile-category-item"
-        key={entry.category}
-      >
-        <span
-          className="mobile-category-indicator"
-          style={{
-            background: [
-              '#0088FE',
-              '#00C49F',
-              '#FFBB28',
-              '#FF8042',
-              '#8884D8',
-              '#82CA9D',
-              '#FF6666',
-              '#A4DE6C',
-            ][index % 8],
-          }}
-        />
+                return (
+                  <div
+                    className="mobile-category-item"
+                    key={entry.category}
+                  >
+                    <span
+                      className="mobile-category-indicator"
+                      style={{
+                        background: [
+                          '#0088FE',
+                          '#00C49F',
+                          '#FFBB28',
+                          '#FF8042',
+                          '#8884D8',
+                          '#82CA9D',
+                          '#FF6666',
+                          '#A4DE6C',
+                        ][index % 8],
+                      }}
+                    />
 
-        <span className="mobile-category-name">
-          {entry.category}
-        </span>
+                    <span className="mobile-category-name">
+                      {entry.category}
+                    </span>
 
-        <span className="mobile-category-amount">
-          RM {Number(entry.amount).toFixed(2)}
-        </span>
+                    <span className="mobile-category-amount">
+                      RM {Number(entry.amount).toFixed(2)}
+                    </span>
 
-        <span className="mobile-category-percentage">
-          {percentage.toFixed(1)}%
-        </span>
-      </div>
-    )
-  })}
-</div>
+                    <span className="mobile-category-percentage">
+                      {percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>
