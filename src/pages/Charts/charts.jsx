@@ -279,7 +279,7 @@ function Charts() {
           <div className="chart-title">
             {selectedSubcategory ? (
               <>
-                <h2>{selectedSubcategory} - Sub-subcategory</h2>
+                <h2>Sub_subcategory ({selectedCategory} &gt; {selectedSubcategory})</h2>
                 <button
                   type="button"
                   onClick={() => setSelectedSubcategory(null)}
@@ -289,7 +289,7 @@ function Charts() {
               </>
             ) : selectedCategory ? (
               <>
-                <h2>{selectedCategory} - Subcategory</h2>
+                <h2>Subcategory ({selectedCategory})</h2>
                 <button
                   type="button"
                   onClick={() => {
@@ -301,7 +301,7 @@ function Charts() {
                 </button>
               </>
             ) : (
-              <h2>Spending by Category</h2>
+              <h2>Category</h2>
             )}
           </div>
 
@@ -410,18 +410,26 @@ function Charts() {
                           categoryIndex >= 0 ? categoryIndex % CATEGORY_COLORS.length : index % CATEGORY_COLORS.length
                         ]
 
+                        const colorData = selectedSubcategory
+                          ? subsubcategorySpending
+                          : selectedCategory
+                            ? subcategorySpending
+                            : categorySpending
+
                         const subcategoryColors = getSubcategoryColors(
                           baseColor,
-                          subcategorySpending.length
+                          colorData.length
                         )
 
                         return (
                           <Cell
                             key={entry.category}
                             fill={
-                              selectedCategory
+                              selectedSubcategory
                                 ? subcategoryColors[index]
-                                : CATEGORY_COLORS[index % CATEGORY_COLORS.length]
+                                : selectedCategory
+                                  ? subcategoryColors[index]
+                                  : CATEGORY_COLORS[index % CATEGORY_COLORS.length]
                             }
                           />
                         )

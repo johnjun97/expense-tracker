@@ -66,7 +66,8 @@
 }
 
 .mobile-category-list {
-  display: none;
+  display: block;
+  margin-top: 16px;
 }
 
 .mobile-category-item {
@@ -142,10 +143,6 @@
 
   .pie-chart {
     height: 380px;
-  }
-
-  .mobile-category-list {
-    display: block;
   }
 
   .chart-card .recharts-legend-wrapper {
