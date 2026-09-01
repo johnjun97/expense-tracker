@@ -4,7 +4,7 @@ function Loading({ text = 'Loading...' }) {
   return (
     <div className="loading-overlay">
       <div className="loading-box">
-        <p>{text}</p>
+        <p>{text.replace(/\.*$/, '')}</p>
       </div>
     </div>
   )

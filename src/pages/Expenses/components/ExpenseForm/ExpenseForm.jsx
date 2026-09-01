@@ -18,7 +18,7 @@ function ExpenseForm({
   const [subcategory, setSubcategory] = useState('')
   const [subcategorySuggestions, setSubcategorySuggestions] = useState([])
   const [subcategoryOpen, setSubcategoryOpen] = useState(false)
-const [expenseDate, setExpenseDate] = useState(new Date())
+  const [expenseDate, setExpenseDate] = useState(new Date())
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -33,11 +33,11 @@ const [expenseDate, setExpenseDate] = useState(new Date())
     setAmount(expense.amount ?? '')
     setCategory(expense.category ?? '')
     setSubcategory(expense.subcategory ?? '')
-setExpenseDate(
-  expense.expense_date
-    ? new Date(`${expense.expense_date}T00:00:00`)
-    : null
-)
+    setExpenseDate(
+      expense.expense_date
+        ? new Date(`${expense.expense_date}T00:00:00`)
+        : null
+    )
     setNote(expense.note ?? '')
   }, [expense])
 
@@ -173,15 +173,15 @@ setExpenseDate(
       return
     }
 
-const expenseData = {
-  amount: Number(amount),
-  category,
-  subcategory: subcategory || null,
-  expense_date: expenseDate
-    ? expenseDate.toISOString().split('T')[0]
-    : null,
-  note: note || null,
-}
+    const expenseData = {
+      amount: Number(amount),
+      category,
+      subcategory: subcategory || null,
+      expense_date: expenseDate
+        ? `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, '0')}-${String(expenseDate.getDate()).padStart(2, '0')}`
+        : null,
+      note: note || null,
+    }
 
     let data
     let saveError
@@ -257,11 +257,19 @@ const expenseData = {
           <label htmlFor="amount">Amount</label>
           <input
             id="amount"
-            type="number"
-            step="0.01"
-            min="0.01"
+            type="text"
+            inputMode="numeric"
             value={amount}
-            onChange={(event) => setAmount(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value.replace(/\D/g, '')
+
+              if (!value) {
+                setAmount('')
+                return
+              }
+
+              setAmount((Number(value) / 100).toFixed(2))
+            }}
             placeholder="0.00"
             required
           />
@@ -380,14 +388,14 @@ const expenseData = {
 
         <div className="form-group">
           <label htmlFor="expense-date">Date</label>
-<DatePicker
-  id="expense-date"
-  selected={expenseDate}
-  onChange={(date) => setExpenseDate(date)}
-  dateFormat="dd/MM/yyyy"
-  placeholderText="DD/MM/YYYY"
-  required
-/>
+          <DatePicker
+            id="expense-date"
+            selected={expenseDate}
+            onChange={(date) => setExpenseDate(date)}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="DD/MM/YYYY"
+            required
+          />
         </div>
 
         <div className="form-group">
