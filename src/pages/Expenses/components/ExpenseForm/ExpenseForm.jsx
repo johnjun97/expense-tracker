@@ -18,6 +18,10 @@ function ExpenseForm({
   const [subcategory, setSubcategory] = useState('')
   const [subcategorySuggestions, setSubcategorySuggestions] = useState([])
   const [subcategoryOpen, setSubcategoryOpen] = useState(false)
+  const [subSubcategory, setSubSubcategory] = useState('')
+  const [subSubcategorySuggestions, setSubSubcategorySuggestions] = useState([])
+  const [subSubcategoryOpen, setSubSubcategoryOpen] = useState(false)
+  const subSubcategoryRef = useRef(null)
   const [expenseDate, setExpenseDate] = useState(new Date())
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,6 +37,7 @@ function ExpenseForm({
     setAmount(expense.amount ?? '')
     setCategory(expense.category ?? '')
     setSubcategory(expense.subcategory ?? '')
+    setSubSubcategory(expense.sub_subcategory ?? '')
     setExpenseDate(
       expense.expense_date
         ? new Date(`${expense.expense_date}T00:00:00`)
@@ -134,6 +139,57 @@ function ExpenseForm({
   }, [category])
 
   useEffect(() => {
+    async function loadSubSubcategorySuggestions() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user || !category.trim() || !subcategory.trim()) {
+        setSubSubcategorySuggestions([])
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('expenses_tracker_expenses')
+        .select('sub_subcategory, expense_date')
+        .eq('user_id', user.id)
+        .eq('category', category.trim())
+        .eq('subcategory', subcategory.trim())
+        .not('sub_subcategory', 'is', null)
+        .order('expense_date', { ascending: false })
+
+      if (error) {
+        console.error(
+          'Failed to load sub-subcategory suggestions:',
+          error
+        )
+        return
+      }
+
+      const uniqueSubSubcategories = []
+      const seen = new Set()
+
+      for (const expense of data) {
+        const subSubcategory = expense.sub_subcategory?.trim()
+
+        if (
+          !subSubcategory ||
+          seen.has(subSubcategory.toLowerCase())
+        ) {
+          continue
+        }
+
+        seen.add(subSubcategory.toLowerCase())
+        uniqueSubSubcategories.push(subSubcategory)
+      }
+
+      setSubSubcategorySuggestions(uniqueSubSubcategories)
+    }
+
+    loadSubSubcategorySuggestions()
+  }, [category, subcategory])
+
+  useEffect(() => {
     function handleClickOutside(event) {
       if (
         categoryRef.current &&
@@ -147,6 +203,12 @@ function ExpenseForm({
         !subcategoryRef.current.contains(event.target)
       ) {
         setSubcategoryOpen(false)
+      }
+      if (
+        subSubcategoryRef.current &&
+        !subSubcategoryRef.current.contains(event.target)
+      ) {
+        setSubSubcategoryOpen(false)
       }
     }
 
@@ -177,6 +239,7 @@ function ExpenseForm({
       amount: Number(amount),
       category,
       subcategory: subcategory || null,
+      sub_subcategory: subSubcategory || null,
       expense_date: expenseDate
         ? `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, '0')}-${String(expenseDate.getDate()).padStart(2, '0')}`
         : null,
@@ -383,6 +446,69 @@ function ExpenseForm({
                   )}
               </div>
             )}
+          </div>
+        </div>
+        <div className="form-group">
+          <label htmlFor="sub-subcategory">Sub-subcategory</label>
+
+          <div className="category-dropdown" ref={subSubcategoryRef}>
+            <input
+              id="sub-subcategory"
+              type="text"
+              value={subSubcategory}
+              autoComplete="off"
+              onChange={(event) => {
+                setSubSubcategory(event.target.value)
+                setSubSubcategoryOpen(true)
+              }}
+              onFocus={() => {
+                if (category.trim() && subcategory.trim()) {
+                  setSubSubcategoryOpen(true)
+                }
+              }}
+              placeholder={
+                category && subcategory
+                  ? 'Optional'
+                  : 'Select subcategory first'
+              }
+              disabled={!category.trim() || !subcategory.trim()}
+            />
+
+            {subSubcategoryOpen &&
+              category.trim() &&
+              subcategory.trim() && (
+                <div className="category-dropdown-menu">
+                  {subSubcategorySuggestions
+                    .filter((item) =>
+                      item
+                        .toLowerCase()
+                        .includes(subSubcategory.toLowerCase())
+                    )
+                    .map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        className="category-dropdown-item"
+                        onClick={() => {
+                          setSubSubcategory(item)
+                          setSubSubcategoryOpen(false)
+                        }}
+                      >
+                        {item}
+                      </button>
+                    ))}
+
+                  {subSubcategorySuggestions.filter((item) =>
+                    item
+                      .toLowerCase()
+                      .includes(subSubcategory.toLowerCase())
+                  ).length === 0 && !subSubcategory && (
+                      <div className="category-dropdown-empty">
+                        No suggestions yet
+                      </div>
+                    )}
+                </div>
+              )}
           </div>
         </div>
 

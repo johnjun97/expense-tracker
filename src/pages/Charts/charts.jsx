@@ -61,6 +61,7 @@ function Charts() {
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600)
 
   useEffect(() => {
@@ -166,6 +167,33 @@ function Charts() {
     ).sort((a, b) => b.amount - a.amount)
     : []
 
+  const subsubcategorySpending = selectedSubcategory
+    ? Object.values(
+      filteredExpenses.reduce((result, expense) => {
+        if (
+          expense.category?.trim() !== selectedCategory ||
+          expense.subcategory?.trim() !== selectedSubcategory
+        ) {
+          return result
+        }
+
+        const subsubcategory =
+          expense.sub_subcategory?.trim() || 'Others'
+
+        if (!result[subsubcategory]) {
+          result[subsubcategory] = {
+            category: subsubcategory,
+            amount: 0,
+          }
+        }
+
+        result[subsubcategory].amount += Number(expense.amount)
+
+        return result
+      }, {})
+    ).sort((a, b) => b.amount - a.amount)
+    : []
+
   if (loading) {
     return (
       <>
@@ -249,14 +277,25 @@ function Charts() {
 
         <div className="chart-card">
           <div className="chart-title">
-            {selectedCategory ? (
+            {selectedSubcategory ? (
               <>
-
-
+                <h2>{selectedSubcategory} - Sub-subcategory</h2>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSubcategory(null)}
+                >
+                  Back
+                </button>
+              </>
+            ) : selectedCategory ? (
+              <>
                 <h2>{selectedCategory} - Subcategory</h2>
                 <button
                   type="button"
-                  onClick={() => setSelectedCategory(null)}
+                  onClick={() => {
+                    setSelectedCategory(null)
+                    setSelectedSubcategory(null)
+                  }}
                 >
                   Back
                 </button>
@@ -271,30 +310,97 @@ function Charts() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={selectedCategory ? subcategorySpending : categorySpending}
+                    data={
+                      selectedSubcategory
+                        ? subsubcategorySpending
+                        : selectedCategory
+                          ? subcategorySpending
+                          : categorySpending
+                    }
                     dataKey="amount"
                     nameKey="category"
                     cx="50%"
                     cy="45%"
                     outerRadius={120}
-                    onClick={(data) => {
-                      if (!selectedCategory && data?.category) {
-                        setSelectedCategory(data.category)
-                      }
-                    }}
+                    labelLine={
+                      !isMobile
+                        ? ({ index }) => {
+                          const chartData = selectedSubcategory
+                            ? subsubcategorySpending
+                            : selectedCategory
+                              ? subcategorySpending
+                              : categorySpending
+
+                          const value = Number(chartData[index]?.amount || 0)
+
+                          const percentage =
+                            totalSpending > 0
+                              ? (value / totalSpending) * 100
+                              : 0
+
+                          return percentage >= 5
+                        }
+                        : false
+                    }
                     label={
                       isMobile
                         ? false
-                        : ({ value }) => {
+                        : ({ value, cx, cy, midAngle, outerRadius }) => {
                           const percentage =
-                            (Number(value) / totalSpending) * 100
+                            totalSpending > 0
+                              ? (Number(value) / totalSpending) * 100
+                              : 0
 
-                          return `RM ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`
+                          // Do not show labels for small slices
+                          if (percentage < 5) {
+                            return null
+                          }
+
+                          const RADIAN = Math.PI / 180
+                          const radius = outerRadius + 35
+
+                          const x =
+                            cx + radius * Math.cos(-midAngle * RADIAN)
+
+                          const y =
+                            cy + radius * Math.sin(-midAngle * RADIAN)
+
+                          return (
+                            <text
+                              x={x}
+                              y={y}
+                              textAnchor={x > cx ? 'start' : 'end'}
+                              dominantBaseline="central"
+                              fontSize={12}
+                            >
+                              {`RM ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`}
+                            </text>
+                          )
                         }
                     }
+                    onClick={(data) => {
+                      if (!data?.category) {
+                        return
+                      }
+
+                      if (!selectedCategory) {
+                        setSelectedCategory(data.category)
+                        return
+                      }
+
+                      if (!selectedSubcategory) {
+                        setSelectedSubcategory(data.category)
+                      }
+                    }}
                     cursor={!selectedCategory ? 'pointer' : 'default'}
                   >
-                    {(selectedCategory ? subcategorySpending : categorySpending).map(
+                    {(
+                      selectedSubcategory
+                        ? subsubcategorySpending
+                        : selectedCategory
+                          ? subcategorySpending
+                          : categorySpending
+                    ).map(
                       (entry, index) => {
                         const categoryIndex = categorySpending.findIndex(
                           (item) => item.category === selectedCategory
@@ -352,7 +458,13 @@ function Charts() {
             </div>
 
             <div className="mobile-category-list">
-              {(selectedCategory ? subcategorySpending : categorySpending).map(
+              {(
+                selectedSubcategory
+                  ? subsubcategorySpending
+                  : selectedCategory
+                    ? subcategorySpending
+                    : categorySpending
+              ).map(
                 (entry, index) => {
                   const percentage =
                     (Number(entry.amount) / totalSpending) * 100
@@ -364,6 +476,11 @@ function Charts() {
                       onClick={() => {
                         if (!selectedCategory) {
                           setSelectedCategory(entry.category)
+                          return
+                        }
+
+                        if (!selectedSubcategory) {
+                          setSelectedSubcategory(entry.category)
                         }
                       }}
                       style={{
@@ -414,7 +531,7 @@ function Charts() {
             </div>
           </div>
         </div>
-      </div>
+      </div >
     </>
   )
 }
