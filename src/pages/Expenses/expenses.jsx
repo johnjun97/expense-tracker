@@ -76,7 +76,7 @@ function Expenses() {
       const { data, error } = await supabase
         .from('expenses_tracker_expenses')
         .select('*')
-        .order('expense_date', { ascending: false })
+        .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Failed to load expenses:', error)
