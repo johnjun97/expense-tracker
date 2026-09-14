@@ -126,10 +126,25 @@
   font-size: 14px;
 }
 
+.currency-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 @media (max-width: 600px) {
 
   .charts-page {
     padding: 12px;
+  }
+
+  .charts-filter {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .charts-filter select {
+    max-width: 100%;
   }
 
   .charts-summary,
@@ -148,4 +163,5 @@
   .chart-card .recharts-legend-wrapper {
     display: none;
   }
+
 }
