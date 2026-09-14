@@ -126,10 +126,32 @@
   font-size: 14px;
 }
 
+.charts-summary-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.charts-summary-title h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 32px;
+}
+
 .currency-filter-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+}
+
+.currency-filter-group select {
+  height: 32px;
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 @media (max-width: 600px) {
@@ -163,5 +185,11 @@
   .chart-card .recharts-legend-wrapper {
     display: none;
   }
+
+.charts-summary-title {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
 
 }

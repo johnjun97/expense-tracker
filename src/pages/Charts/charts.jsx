@@ -282,30 +282,32 @@ function Charts() {
               )
             })}
           </select>
-
-          <div className="currency-filter-group">
-            <label htmlFor="currency-filter">Currency</label>
-
-            <select
-              id="currency-filter"
-              value={selectedCurrency}
-              onChange={(event) => {
-                setSelectedCurrency(event.target.value)
-                setSelectedCategory(null)
-                setSelectedSubcategory(null)
-              }}
-            >
-              {currencySuggestions.map((currency) => (
-                <option key={currency} value={currency}>
-                  {currency}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
 
         <div className="charts-summary">
-          <h2>Total Spending</h2>
+          <div className="charts-summary-title">
+            <h2>Total Spending</h2>
+
+            <div className="currency-filter-group">
+              <select
+                id="currency-filter"
+                value={selectedCurrency}
+                onChange={(event) => {
+                  setSelectedCurrency(event.target.value)
+                  setSelectedCategory(null)
+                  setSelectedSubcategory(null)
+                }}
+              >
+                {currencySuggestions.map((currency) => (
+                  <option key={currency} value={currency}>
+                    {currency}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+          </div>
+
           <strong>
             {selectedCurrency} {totalSpending.toFixed(2)}
           </strong>
