@@ -60,6 +60,7 @@ function Charts() {
 
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
+  const [selectedCurrency, setSelectedCurrency] = useState('MYR')
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedSubcategory, setSelectedSubcategory] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600)
@@ -97,6 +98,14 @@ function Charts() {
     loadExpenses()
   }, [])
 
+  const currencySuggestions = [
+    ...new Set(
+      expenses
+        .map((expense) => expense.currency?.trim().toUpperCase())
+        .filter(Boolean)
+    ),
+  ]
+
   const filteredExpenses = expenses.filter((expense) => {
     const date = expense.expense_date
 
@@ -111,6 +120,13 @@ function Charts() {
     }
 
     if (selectedMonth && month !== selectedMonth) {
+      return false
+    }
+
+    if (
+      selectedCurrency &&
+      expense.currency?.trim().toUpperCase() !== selectedCurrency
+    ) {
       return false
     }
 
@@ -266,12 +282,30 @@ function Charts() {
               )
             })}
           </select>
+
+          <label htmlFor="currency-filter">Currency</label>
+
+          <select
+            id="currency-filter"
+            value={selectedCurrency}
+            onChange={(event) => {
+              setSelectedCurrency(event.target.value)
+              setSelectedCategory(null)
+              setSelectedSubcategory(null)
+            }}
+          >
+            {currencySuggestions.map((currency) => (
+              <option key={currency} value={currency}>
+                {currency}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="charts-summary">
           <h2>Total Spending</h2>
           <strong>
-            RM {totalSpending.toFixed(2)}
+            {selectedCurrency} {totalSpending.toFixed(2)}
           </strong>
         </div>
 
@@ -373,7 +407,7 @@ function Charts() {
                               dominantBaseline="central"
                               fontSize={12}
                             >
-                              {`RM ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`}
+                              {`${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`}
                             </text>
                           )
                         }
@@ -439,7 +473,7 @@ function Charts() {
 
                   <Tooltip
                     formatter={(value, name) => [
-                      `RM ${Number(value).toFixed(2)}`,
+                      `${selectedCurrency} ${Number(value).toFixed(2)}`,
                       name,
                     ]}
                   />
@@ -527,7 +561,7 @@ function Charts() {
                       </span>
 
                       <span className="mobile-category-amount">
-                        RM {Number(entry.amount).toFixed(2)}
+                        {selectedCurrency} {Number(entry.amount).toFixed(2)}
                       </span>
 
                       <span className="mobile-category-percentage">

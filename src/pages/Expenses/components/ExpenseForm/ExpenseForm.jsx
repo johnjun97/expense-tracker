@@ -10,6 +10,10 @@ function ExpenseForm({
   onCancel,
 }) {
   const [amount, setAmount] = useState('')
+  const [currency, setCurrency] = useState('MYR')
+  const [currencySuggestions, setCurrencySuggestions] = useState([])
+  const [currencyOpen, setCurrencyOpen] = useState(false)
+  const currencyRef = useRef(null)
   const [category, setCategory] = useState('')
   const [categorySuggestions, setCategorySuggestions] = useState([])
   const [categoryOpen, setCategoryOpen] = useState(false)
@@ -35,6 +39,7 @@ function ExpenseForm({
     }
 
     setAmount(expense.amount ?? '')
+    setCurrency(expense.currency ?? 'MYR')
     setCategory(expense.category ?? '')
     setSubcategory(expense.subcategory ?? '')
     setSubSubcategory(expense.sub_subcategory ?? '')
@@ -86,6 +91,47 @@ function ExpenseForm({
     }
 
     loadCategorySuggestions()
+  }, [])
+
+  useEffect(() => {
+    async function loadCurrencySuggestions() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('expenses_tracker_expenses')
+        .select('currency')
+        .eq('user_id', user.id)
+        .not('currency', 'is', null)
+
+      if (error) {
+        console.error('Failed to load currency suggestions:', error)
+        return
+      }
+
+      const uniqueCurrencies = []
+      const seen = new Set()
+
+      for (const expense of data) {
+        const currency = expense.currency?.trim().toUpperCase()
+
+        if (!currency || seen.has(currency)) {
+          continue
+        }
+
+        seen.add(currency)
+        uniqueCurrencies.push(currency)
+      }
+
+      setCurrencySuggestions(uniqueCurrencies)
+    }
+
+    loadCurrencySuggestions()
   }, [])
 
   useEffect(() => {
@@ -204,11 +250,19 @@ function ExpenseForm({
       ) {
         setSubcategoryOpen(false)
       }
+
       if (
         subSubcategoryRef.current &&
         !subSubcategoryRef.current.contains(event.target)
       ) {
         setSubSubcategoryOpen(false)
+      }
+
+      if (
+        currencyRef.current &&
+        !currencyRef.current.contains(event.target)
+      ) {
+        setCurrencyOpen(false)
       }
     }
 
@@ -237,6 +291,7 @@ function ExpenseForm({
 
     const expenseData = {
       amount: Number(amount),
+      currency: currency.trim().toUpperCase(),
       category,
       subcategory: subcategory || null,
       sub_subcategory: subSubcategory || null,
@@ -318,24 +373,71 @@ function ExpenseForm({
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="amount">Amount</label>
-          <input
-            id="amount"
-            type="text"
-            inputMode="numeric"
-            value={amount}
-            onChange={(event) => {
-              const value = event.target.value.replace(/\D/g, '')
 
-              if (!value) {
-                setAmount('')
-                return
-              }
+          <div className="amount-input-group" ref={currencyRef}>
+            <div className="currency-input">
+              <input
+                type="text"
+                value={currency}
+                onChange={(event) => {
+                  setCurrency(event.target.value.toUpperCase())
+                  setCurrencyOpen(true)
+                }}
+                onFocus={() => setCurrencyOpen(true)}
+                placeholder="MYR"
+                maxLength={3}
+                required
+              />
 
-              setAmount((Number(value) / 100).toFixed(2))
-            }}
-            placeholder="0.00"
-            required
-          />
+              {currencyOpen && (
+                <div className="currency-dropdown-menu">
+                  {currencySuggestions
+                    .filter((item) =>
+                      item.includes(currency.toUpperCase())
+                    )
+                    .map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        className="currency-dropdown-item"
+                        onClick={() => {
+                          setCurrency(item)
+                          setCurrencyOpen(false)
+                        }}
+                      >
+                        {item}
+                      </button>
+                    ))}
+
+                  {currency &&
+                    !currencySuggestions.includes(currency.toUpperCase()) && (
+                      <div className="currency-dropdown-new">
+                        Use "{currency.toUpperCase()}"
+                      </div>
+                    )}
+                </div>
+              )}
+            </div>
+
+            <input
+              id="amount"
+              type="text"
+              inputMode="numeric"
+              value={amount}
+              onChange={(event) => {
+                const value = event.target.value.replace(/\D/g, '')
+
+                if (!value) {
+                  setAmount('')
+                  return
+                }
+
+                setAmount((Number(value) / 100).toFixed(2))
+              }}
+              placeholder="0.00"
+              required
+            />
+          </div>
         </div>
 
         <div className="form-group">

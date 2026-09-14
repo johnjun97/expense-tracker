@@ -76,7 +76,7 @@ function Expenses() {
       const { data, error } = await supabase
         .from('expenses_tracker_expenses')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('expense_date', { ascending: false })
 
       if (error) {
         console.error('Failed to load expenses:', error)
@@ -185,7 +185,7 @@ function Expenses() {
 
                   <div className="expense-card-actions">
                     <strong>
-                      RM {Number(expense.amount).toFixed(2)}
+                      {expense.currency || 'MYR'} {Number(expense.amount).toFixed(2)}
                     </strong>
 
                     <button
@@ -207,6 +207,12 @@ function Expenses() {
                 {expense.subcategory && (
                   <p className="expense-subcategory">
                     {expense.subcategory}
+                  </p>
+                )}
+
+                {expense.sub_subcategory && (
+                  <p className="expense-sub-subcategory">
+                    {expense.sub_subcategory}
                   </p>
                 )}
 
