@@ -547,21 +547,21 @@ function Charts() {
                     )}
                   </Pie>
 
-        {!isMobile && (
-  <Tooltip
-    formatter={(value, name) => {
-      const percentage =
-        chartTotal > 0
-          ? (Number(value) / chartTotal) * 100
-          : 0
+                  {!isMobile && (
+                    <Tooltip
+                      formatter={(value, name) => {
+                        const percentage =
+                          chartTotal > 0
+                            ? (Number(value) / chartTotal) * 100
+                            : 0
 
-      return [
-        `${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`,
-        name,
-      ]
-    }}
-  />
-)}
+                        return [
+                          `${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`,
+                          name,
+                        ]
+                      }}
+                    />
+                  )}
 
                   <Legend
                     onClick={(data) => {
