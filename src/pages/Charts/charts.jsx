@@ -457,8 +457,8 @@ function Charts() {
                     }
                     dataKey="amount"
                     nameKey="category"
-  cx="50%"
-cy="45%"
+                    cx="50%"
+                    cy="45%"
                     outerRadius={isMobile ? 160 : 120}
                     activeShape={false}
                     labelLine={!isMobile}
@@ -547,19 +547,21 @@ cy="45%"
                     )}
                   </Pie>
 
-          <Tooltip
-  formatter={(value, name) => {
-    const percentage =
-      chartTotal > 0
-        ? (Number(value) / chartTotal) * 100
-        : 0
+        {!isMobile && (
+  <Tooltip
+    formatter={(value, name) => {
+      const percentage =
+        chartTotal > 0
+          ? (Number(value) / chartTotal) * 100
+          : 0
 
-    return [
-      `${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`,
-      name,
-    ]
-  }}
-/>
+      return [
+        `${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`,
+        name,
+      ]
+    }}
+  />
+)}
 
                   <Legend
                     onClick={(data) => {
@@ -569,9 +571,9 @@ cy="45%"
                     }}
                     formatter={(value) => (
                       <span
-           style={{
-  cursor: isMobile || selectedCategory ? 'default' : 'pointer',
-}}
+                        style={{
+                          cursor: isMobile || selectedCategory ? 'default' : 'pointer',
+                        }}
                       >
                         {value}
                       </span>
@@ -591,10 +593,10 @@ cy="45%"
                     : categorySpending
               ).map(
                 (entry, index) => {
-    const percentage =
-  chartTotal > 0
-    ? (Number(entry.amount) / chartTotal) * 100
-    : 0
+                  const percentage =
+                    chartTotal > 0
+                      ? (Number(entry.amount) / chartTotal) * 100
+                      : 0
 
                   return (
                     <div
