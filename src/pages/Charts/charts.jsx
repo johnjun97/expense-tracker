@@ -51,6 +51,121 @@ const getSubcategoryColors = (baseColor, count) => {
   })
 }
 
+const getMobileLabelPosition = ({
+  cx,
+  cy,
+  midAngle,
+  outerRadius,
+  index,
+  dataLength,
+}) => {
+  const RADIAN = Math.PI / 180
+
+  const isRight = Math.cos(-midAngle * RADIAN) >= 0
+
+  // Fixed label columns outside the pie
+  const labelOffset = outerRadius + 18
+  const x = isRight
+    ? cx + labelOffset
+    : cx - labelOffset
+
+  // Spread labels vertically
+  const spacing = dataLength <= 3
+    ? 32
+    : dataLength <= 5
+      ? 28
+      : 24
+
+  const totalHeight = (dataLength - 1) * spacing
+
+  let y = cy - totalHeight / 2 + index * spacing
+
+  // Keep label text inside the chart area
+  y = Math.max(30, Math.min(y, 220))
+
+  return {
+    x,
+    y,
+    isRight,
+  }
+}
+
+const renderPieLabel = ({
+  value,
+  name,
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  totalSpending,
+  selectedCurrency,
+  isMobile,
+}) => {
+  const percentage =
+    totalSpending > 0
+      ? (Number(value) / totalSpending) * 100
+      : 0
+
+  const RADIAN = Math.PI / 180
+
+  // Mobile: only show labels for slices >= 5%
+  if (isMobile) {
+    if (percentage < 5) {
+      return null
+    }
+
+    const radius =
+      innerRadius + (outerRadius - innerRadius) * 0.5
+
+    const x =
+      cx + radius * Math.cos(-midAngle * RADIAN)
+
+    const y =
+      cy + radius * Math.sin(-midAngle * RADIAN)
+
+    return (
+      <text
+        x={x}
+        y={y}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={8}
+        fill="#fff"
+      >
+        <tspan x={x} dy="-5">
+          {name}
+        </tspan>
+
+        <tspan x={x} dy="11">
+          {selectedCurrency} {Number(value).toFixed(2)} ({percentage.toFixed(1)}%)
+        </tspan>
+      </text>
+    )
+  }
+
+  // Desktop
+  const radius = outerRadius + 35
+
+  const x =
+    cx + radius * Math.cos(-midAngle * RADIAN)
+
+  const y =
+    cy + radius * Math.sin(-midAngle * RADIAN)
+
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      fontSize={12}
+    >
+      {`${name} — ${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`}
+    </text>
+  )
+}
+
 function Charts() {
 
   const [expenses, setExpenses] = useState([])
@@ -368,97 +483,49 @@ function Charts() {
                     }
                     dataKey="amount"
                     nameKey="category"
-                    cx="50%"
                     cy="45%"
-                    outerRadius={120}
-                    labelLine={
-                      !isMobile
-                        ? ({ index }) => {
-                          const chartData = selectedSubcategory
-                            ? subsubcategorySpending
-                            : selectedCategory
-                              ? subcategorySpending
-                              : categorySpending
-
-                          const value = Number(chartData[index]?.amount || 0)
-
-                          const percentage =
-                            totalSpending > 0
-                              ? (value / totalSpending) * 100
-                              : 0
-
-                          return percentage >= 5
-                        }
-                        : false
+                    outerRadius={isMobile ? 130 : 120}
+                    labelLine={!isMobile}
+                    label={(props) =>
+                      renderPieLabel({
+                        ...props,
+                        totalSpending,
+                        selectedCurrency,
+                        isMobile,
+                      })
                     }
-                    label={
-                      isMobile
-                        ? false
-                        : ({ value, cx, cy, midAngle, outerRadius }) => {
-                          const percentage =
-                            totalSpending > 0
-                              ? (Number(value) / totalSpending) * 100
-                              : 0
+                    onClick={(data) => {
+                      if (!data?.category) {
+                        return
+                      }
 
-                          // Do not show labels for small slices
-                          if (percentage < 5) {
-                            return null
-                          }
+                      // Category level
+                      if (!selectedCategory) {
+                        setSelectedCategory(data.category)
+                        return
+                      }
 
-                          const RADIAN = Math.PI / 180
-                          const radius = outerRadius + 35
+                      // Subcategory level
+                      if (!selectedSubcategory) {
+                        const hasSubSubcategory = filteredExpenses.some(
+                          (expense) =>
+                            expense.category?.trim() === selectedCategory &&
+                            expense.subcategory?.trim() === data.category &&
+                            expense.sub_subcategory?.trim()
+                        )
 
-                          const x =
-                            cx + radius * Math.cos(-midAngle * RADIAN)
-
-                          const y =
-                            cy + radius * Math.sin(-midAngle * RADIAN)
-
-                          return (
-                            <text
-                              x={x}
-                              y={y}
-                              textAnchor={x > cx ? 'start' : 'end'}
-                              dominantBaseline="central"
-                              fontSize={12}
-                            >
-                              {`${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`}
-                            </text>
-                          )
+                        if (!hasSubSubcategory) {
+                          goToExpenses(data.category)
+                          return
                         }
-                    }
-onClick={(data) => {
-  if (!data?.category) {
-    return
-  }
 
-  // Category level
-  if (!selectedCategory) {
-    setSelectedCategory(data.category)
-    return
-  }
+                        setSelectedSubcategory(data.category)
+                        return
+                      }
 
-  // Subcategory level
-  if (!selectedSubcategory) {
-    const hasSubSubcategory = filteredExpenses.some(
-      (expense) =>
-        expense.category?.trim() === selectedCategory &&
-        expense.subcategory?.trim() === data.category &&
-        expense.sub_subcategory?.trim()
-    )
-
-    if (!hasSubSubcategory) {
-      goToExpenses(data.category)
-      return
-    }
-
-    setSelectedSubcategory(data.category)
-    return
-  }
-
-  // Sub_subcategory level
-  goToExpenses(data.category)
-}}
+                      // Sub_subcategory level
+                      goToExpenses(data.category)
+                    }}
                     cursor={!selectedCategory ? 'pointer' : 'default'}
                   >
                     {(
@@ -505,10 +572,17 @@ onClick={(data) => {
                   </Pie>
 
                   <Tooltip
-                    formatter={(value, name) => [
-                      `${selectedCurrency} ${Number(value).toFixed(2)}`,
-                      name,
-                    ]}
+                    formatter={(value, name, props) => {
+                      const percentage =
+                        totalSpending > 0
+                          ? (Number(value) / totalSpending) * 100
+                          : 0
+
+                      return [
+                        `${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`,
+                        name,
+                      ]
+                    }}
                   />
 
                   <Legend
@@ -548,31 +622,31 @@ onClick={(data) => {
                     <div
                       className="mobile-category-item"
                       key={entry.category}
-    onClick={() => {
-  if (!selectedCategory) {
-    setSelectedCategory(entry.category)
-    return
-  }
+                      onClick={() => {
+                        if (!selectedCategory) {
+                          setSelectedCategory(entry.category)
+                          return
+                        }
 
-  if (!selectedSubcategory) {
-    const hasSubSubcategory = filteredExpenses.some(
-      (expense) =>
-        expense.category?.trim() === selectedCategory &&
-        expense.subcategory?.trim() === entry.category &&
-        expense.sub_subcategory?.trim()
-    )
+                        if (!selectedSubcategory) {
+                          const hasSubSubcategory = filteredExpenses.some(
+                            (expense) =>
+                              expense.category?.trim() === selectedCategory &&
+                              expense.subcategory?.trim() === entry.category &&
+                              expense.sub_subcategory?.trim()
+                          )
 
-    if (!hasSubSubcategory) {
-      goToExpenses(entry.category)
-      return
-    }
+                          if (!hasSubSubcategory) {
+                            goToExpenses(entry.category)
+                            return
+                          }
 
-    setSelectedSubcategory(entry.category)
-    return
-  }
+                          setSelectedSubcategory(entry.category)
+                          return
+                        }
 
-  goToExpenses(entry.category)
-}}
+                        goToExpenses(entry.category)
+                      }}
                       style={{
                         cursor: selectedCategory ? 'default' : 'pointer',
                       }}
