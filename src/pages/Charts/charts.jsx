@@ -51,45 +51,6 @@ const getSubcategoryColors = (baseColor, count) => {
   })
 }
 
-const getMobileLabelPosition = ({
-  cx,
-  cy,
-  midAngle,
-  outerRadius,
-  index,
-  dataLength,
-}) => {
-  const RADIAN = Math.PI / 180
-
-  const isRight = Math.cos(-midAngle * RADIAN) >= 0
-
-  // Fixed label columns outside the pie
-  const labelOffset = outerRadius + 18
-  const x = isRight
-    ? cx + labelOffset
-    : cx - labelOffset
-
-  // Spread labels vertically
-  const spacing = dataLength <= 3
-    ? 32
-    : dataLength <= 5
-      ? 28
-      : 24
-
-  const totalHeight = (dataLength - 1) * spacing
-
-  let y = cy - totalHeight / 2 + index * spacing
-
-  // Keep label text inside the chart area
-  y = Math.max(30, Math.min(y, 220))
-
-  return {
-    x,
-    y,
-    isRight,
-  }
-}
-
 const renderPieLabel = ({
   value,
   name,
@@ -98,20 +59,20 @@ const renderPieLabel = ({
   midAngle,
   innerRadius,
   outerRadius,
-  totalSpending,
+  chartTotal,
   selectedCurrency,
   isMobile,
 }) => {
   const percentage =
-    totalSpending > 0
-      ? (Number(value) / totalSpending) * 100
+    chartTotal > 0
+      ? (Number(value) / chartTotal) * 100
       : 0
 
   const RADIAN = Math.PI / 180
 
-  // Mobile: only show labels for slices >= 5%
+  // Mobile: only show labels for slices >= %
   if (isMobile) {
-    if (percentage < 5) {
+    if (percentage <= 25) {
       return null
     }
 
@@ -130,14 +91,14 @@ const renderPieLabel = ({
         y={y}
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={8}
+        fontSize={12}
         fill="#fff"
       >
-        <tspan x={x} dy="-5">
+        <tspan x={x} dy="-6">
           {name}
         </tspan>
 
-        <tspan x={x} dy="11">
+        <tspan x={x} dy="13">
           {selectedCurrency} {Number(value).toFixed(2)} ({percentage.toFixed(1)}%)
         </tspan>
       </text>
@@ -336,6 +297,19 @@ function Charts() {
     ).sort((a, b) => b.amount - a.amount)
     : []
 
+  // ADD HERE
+  const currentChartData =
+    selectedSubcategory
+      ? subsubcategorySpending
+      : selectedCategory
+        ? subcategorySpending
+        : categorySpending
+
+  const chartTotal = currentChartData.reduce(
+    (total, entry) => total + Number(entry.amount),
+    0
+  )
+
   if (loading) {
     return (
       <>
@@ -483,13 +457,15 @@ function Charts() {
                     }
                     dataKey="amount"
                     nameKey="category"
-                    cy="45%"
-                    outerRadius={isMobile ? 130 : 120}
+  cx="50%"
+cy="45%"
+                    outerRadius={isMobile ? 160 : 120}
+                    activeShape={false}
                     labelLine={!isMobile}
                     label={(props) =>
                       renderPieLabel({
                         ...props,
-                        totalSpending,
+                        chartTotal,
                         selectedCurrency,
                         isMobile,
                       })
@@ -526,7 +502,7 @@ function Charts() {
                       // Sub_subcategory level
                       goToExpenses(data.category)
                     }}
-                    cursor={!selectedCategory ? 'pointer' : 'default'}
+                    cursor={!isMobile && !selectedCategory ? 'pointer' : 'default'}
                   >
                     {(
                       selectedSubcategory
@@ -571,19 +547,19 @@ function Charts() {
                     )}
                   </Pie>
 
-                  <Tooltip
-                    formatter={(value, name, props) => {
-                      const percentage =
-                        totalSpending > 0
-                          ? (Number(value) / totalSpending) * 100
-                          : 0
+          <Tooltip
+  formatter={(value, name) => {
+    const percentage =
+      chartTotal > 0
+        ? (Number(value) / chartTotal) * 100
+        : 0
 
-                      return [
-                        `${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`,
-                        name,
-                      ]
-                    }}
-                  />
+    return [
+      `${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`,
+      name,
+    ]
+  }}
+/>
 
                   <Legend
                     onClick={(data) => {
@@ -593,9 +569,9 @@ function Charts() {
                     }}
                     formatter={(value) => (
                       <span
-                        style={{
-                          cursor: selectedCategory ? 'default' : 'pointer',
-                        }}
+           style={{
+  cursor: isMobile || selectedCategory ? 'default' : 'pointer',
+}}
                       >
                         {value}
                       </span>
@@ -615,8 +591,10 @@ function Charts() {
                     : categorySpending
               ).map(
                 (entry, index) => {
-                  const percentage =
-                    (Number(entry.amount) / totalSpending) * 100
+    const percentage =
+  chartTotal > 0
+    ? (Number(entry.amount) / chartTotal) * 100
+    : 0
 
                   return (
                     <div

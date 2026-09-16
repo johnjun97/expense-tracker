@@ -155,6 +155,12 @@
 }
 
 @media (max-width: 600px) {
+    .pie-chart svg,
+  .pie-chart svg *,
+  .mobile-category-list,
+  .mobile-category-list * {
+    cursor: default !important;
+  }
 
   .charts-page {
     padding: 12px;
