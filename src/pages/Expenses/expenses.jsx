@@ -1,21 +1,32 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Navbar/Navbar'
 import Loading from '../../components/Loading/Loading'
 import { formatDate } from '../../utils/formatDate'
 import './expenses.css'
 
-
 function Expenses() {
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
+
   const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [categorySuggestions, setCategorySuggestions] = useState([])
 
   const navigate = useNavigate()
+
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const urlSearch = searchParams.get('search') || ''
+  const urlDate = searchParams.get('date') || ''
+  const urlFrom = searchParams.get('from') || ''
+  const urlTo = searchParams.get('to') || ''
+
+  const [search, setSearch] = useState(urlSearch)
+  const [dateFilter, setDateFilter] = useState(urlDate)
+  const [fromDate, setFromDate] = useState(urlFrom)
+  const [toDate, setToDate] = useState(urlTo)
 
   async function handleDelete(expenseId) {
     const confirmed = window.confirm(
@@ -51,15 +62,17 @@ function Expenses() {
 
     const dateParts = expense.expense_date?.split('-') || []
 
-    const searchableDate = dateParts.length === 3
-      ? `${Number(dateParts[2])}/${Number(dateParts[1])}/${dateParts[0]}`
-      : ''
+    const searchableDate =
+      dateParts.length === 3
+        ? `${Number(dateParts[2])}/${Number(dateParts[1])}/${dateParts[0]}`
+        : ''
 
     const amountText = Number(expense.amount).toFixed(2)
 
     const matchesSearch =
       expense.category?.toLowerCase().includes(searchText) ||
       expense.subcategory?.toLowerCase().includes(searchText) ||
+      expense.sub_subcategory?.toLowerCase().includes(searchText) ||
       expense.note?.toLowerCase().includes(searchText) ||
       amountText.includes(searchText) ||
       formattedDate.includes(searchText) ||
@@ -68,7 +81,79 @@ function Expenses() {
     const matchesCategory =
       !categoryFilter || expense.category === categoryFilter
 
-    return matchesSearch && matchesCategory
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const expenseDate = new Date(
+      `${expense.expense_date}T00:00:00`
+    )
+    expenseDate.setHours(0, 0, 0, 0)
+
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+
+    const startOfWeek = new Date(today)
+    const dayOfWeek = today.getDay()
+    const daysSinceMonday =
+      dayOfWeek === 0 ? 6 : dayOfWeek - 1
+
+    startOfWeek.setDate(
+      today.getDate() - daysSinceMonday
+    )
+
+    const startOfMonth = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1
+    )
+
+    let matchesDate = true
+
+    if (dateFilter === 'today') {
+      matchesDate =
+        expenseDate.getTime() === today.getTime()
+    }
+
+    if (dateFilter === 'yesterday') {
+      matchesDate =
+        expenseDate.getTime() === yesterday.getTime()
+    }
+
+    if (dateFilter === 'this-week') {
+      matchesDate =
+        expenseDate >= startOfWeek &&
+        expenseDate <= today
+    }
+
+    if (dateFilter === 'this-month') {
+      matchesDate =
+        expenseDate.getFullYear() === today.getFullYear() &&
+        expenseDate.getMonth() === today.getMonth()
+    }
+
+    if (dateFilter === 'custom-range') {
+      if (fromDate) {
+        const selectedFromDate = new Date(
+          `${fromDate}T00:00:00`
+        )
+
+        matchesDate =
+          matchesDate &&
+          expenseDate >= selectedFromDate
+      }
+
+      if (toDate) {
+        const selectedToDate = new Date(
+          `${toDate}T00:00:00`
+        )
+
+        matchesDate =
+          matchesDate &&
+          expenseDate <= selectedToDate
+      }
+    }
+
+    return matchesSearch && matchesCategory && matchesDate
   })
 
   useEffect(() => {
@@ -77,6 +162,7 @@ function Expenses() {
         .from('expenses_tracker_expenses')
         .select('*')
         .order('expense_date', { ascending: false })
+        .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Failed to load expenses:', error)
@@ -113,6 +199,60 @@ function Expenses() {
 
     loadExpenses()
   }, [])
+
+  useEffect(() => {
+    setSearch(urlSearch)
+    setDateFilter(urlDate)
+    setFromDate(urlFrom)
+    setToDate(urlTo)
+  }, [urlSearch, urlDate, urlFrom, urlTo])
+
+  function handleDateFilterChange(value) {
+    setDateFilter(value)
+
+    const params = new URLSearchParams(searchParams)
+
+    if (value) {
+      params.set('date', value)
+    } else {
+      params.delete('date')
+      params.delete('from')
+      params.delete('to')
+
+      setFromDate('')
+      setToDate('')
+    }
+
+    setSearchParams(params)
+  }
+
+  function handleFromDateChange(value) {
+    setFromDate(value)
+
+    const params = new URLSearchParams(searchParams)
+
+    if (value) {
+      params.set('from', value)
+    } else {
+      params.delete('from')
+    }
+
+    setSearchParams(params)
+  }
+
+  function handleToDateChange(value) {
+    setToDate(value)
+
+    const params = new URLSearchParams(searchParams)
+
+    if (value) {
+      params.set('to', value)
+    } else {
+      params.delete('to')
+    }
+
+    setSearchParams(params)
+  }
 
   if (loading) {
     return (
@@ -160,8 +300,24 @@ function Expenses() {
           />
 
           <select
+            value={dateFilter}
+            onChange={(event) =>
+              handleDateFilterChange(event.target.value)
+            }
+          >
+            <option value="">All dates</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="this-week">This week</option>
+            <option value="this-month">This month</option>
+            <option value="custom-range">Custom range</option>
+          </select>
+
+          <select
             value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
+            onChange={(event) =>
+              setCategoryFilter(event.target.value)
+            }
           >
             <option value="">All categories</option>
 
@@ -173,31 +329,64 @@ function Expenses() {
           </select>
         </div>
 
+        {dateFilter === 'custom-range' && (
+          <div className="expenses-custom-date">
+            <label>
+              From
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(event) =>
+                  handleFromDateChange(event.target.value)
+                }
+              />
+            </label>
+
+            <label>
+              To
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={(event) =>
+                  handleToDateChange(event.target.value)
+                }
+              />
+            </label>
+          </div>
+        )}
+
         {filteredExpenses.length === 0 ? (
           <p>No matching expenses found.</p>
         ) : (
           <div className="expense-list">
             {filteredExpenses.map((expense) => (
               <div className="expense-card" key={expense.id}>
-
                 <div className="expense-card-header">
                   <strong>{expense.category}</strong>
 
                   <div className="expense-card-actions">
                     <strong>
-                      {expense.currency || 'MYR'} {Number(expense.amount).toFixed(2)}
+                      {expense.currency || 'MYR'}{' '}
+                      {Number(expense.amount).toFixed(2)}
                     </strong>
 
                     <button
                       className="edit-expense-button"
-                      onClick={() => navigate(`/expenses/edit/${expense.id}`)}
+                      onClick={() =>
+                        navigate(
+                          `/expenses/edit/${expense.id}`
+                        )
+                      }
                     >
                       Edit
                     </button>
 
                     <button
                       className="delete-expense-button"
-                      onClick={() => handleDelete(expense.id)}
+                      onClick={() =>
+                        handleDelete(expense.id)
+                      }
                     >
                       Delete
                     </button>

@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { supabase } from '../../lib/supabase'
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar/Navbar'
 import Loading from '../../components/Loading/Loading'
 import './charts.css'
@@ -51,7 +52,9 @@ const getSubcategoryColors = (baseColor, count) => {
 }
 
 function Charts() {
+
   const [expenses, setExpenses] = useState([])
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const currentDate = new Date()
@@ -64,6 +67,10 @@ function Charts() {
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedSubcategory, setSelectedSubcategory] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600)
+
+  function goToExpenses(search) {
+    navigate(`/expenses?search=${encodeURIComponent(search)}`)
+  }
 
   useEffect(() => {
     const handleResize = () => {
@@ -193,8 +200,12 @@ function Charts() {
           return result
         }
 
-        const subsubcategory =
-          expense.sub_subcategory?.trim() || 'Others'
+        const subsubcategory = expense.sub_subcategory?.trim()
+
+        // Do not create an "Others" chart item
+        if (!subsubcategory) {
+          return result
+        }
 
         if (!result[subsubcategory]) {
           result[subsubcategory] = {
@@ -416,20 +427,38 @@ function Charts() {
                           )
                         }
                     }
-                    onClick={(data) => {
-                      if (!data?.category) {
-                        return
-                      }
+onClick={(data) => {
+  if (!data?.category) {
+    return
+  }
 
-                      if (!selectedCategory) {
-                        setSelectedCategory(data.category)
-                        return
-                      }
+  // Category level
+  if (!selectedCategory) {
+    setSelectedCategory(data.category)
+    return
+  }
 
-                      if (!selectedSubcategory) {
-                        setSelectedSubcategory(data.category)
-                      }
-                    }}
+  // Subcategory level
+  if (!selectedSubcategory) {
+    const hasSubSubcategory = filteredExpenses.some(
+      (expense) =>
+        expense.category?.trim() === selectedCategory &&
+        expense.subcategory?.trim() === data.category &&
+        expense.sub_subcategory?.trim()
+    )
+
+    if (!hasSubSubcategory) {
+      goToExpenses(data.category)
+      return
+    }
+
+    setSelectedSubcategory(data.category)
+    return
+  }
+
+  // Sub_subcategory level
+  goToExpenses(data.category)
+}}
                     cursor={!selectedCategory ? 'pointer' : 'default'}
                   >
                     {(
@@ -519,16 +548,31 @@ function Charts() {
                     <div
                       className="mobile-category-item"
                       key={entry.category}
-                      onClick={() => {
-                        if (!selectedCategory) {
-                          setSelectedCategory(entry.category)
-                          return
-                        }
+    onClick={() => {
+  if (!selectedCategory) {
+    setSelectedCategory(entry.category)
+    return
+  }
 
-                        if (!selectedSubcategory) {
-                          setSelectedSubcategory(entry.category)
-                        }
-                      }}
+  if (!selectedSubcategory) {
+    const hasSubSubcategory = filteredExpenses.some(
+      (expense) =>
+        expense.category?.trim() === selectedCategory &&
+        expense.subcategory?.trim() === entry.category &&
+        expense.sub_subcategory?.trim()
+    )
+
+    if (!hasSubSubcategory) {
+      goToExpenses(entry.category)
+      return
+    }
+
+    setSelectedSubcategory(entry.category)
+    return
+  }
+
+  goToExpenses(entry.category)
+}}
                       style={{
                         cursor: selectedCategory ? 'default' : 'pointer',
                       }}

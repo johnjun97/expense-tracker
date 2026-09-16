@@ -1,0 +1,28 @@
+.card {
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: white;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+}
+
+.card-content {
+  margin: 0;
+}
