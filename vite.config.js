@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [
     react(),
 
-VitePWA({
-  registerType: 'autoUpdate',
-  injectRegister: 'auto',
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
 
       manifest: {
         name: 'Expense Tracker',
