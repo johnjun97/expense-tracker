@@ -24,7 +24,7 @@
   opacity: 0.65;
 }
 
-/* Currency filter */
+/* Filters */
 
 .today-expenses-filter {
   display: flex;
@@ -36,12 +36,17 @@
   font-weight: 500;
 }
 
-.today-expenses-filter select {
+.today-expenses-filter select,
+.today-expenses-filter input[type='date'] {
   padding: 6px 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
   background: white;
   cursor: pointer;
+}
+
+.today-expenses-filter span {
+  white-space: nowrap;
 }
 
 /* Total */
@@ -131,7 +136,7 @@
   padding: 12px 0;
 }
 
-.today-expense-subcategory-group + .today-expense-subcategory-group {
+.today-expense-subcategory-group+.today-expense-subcategory-group {
   border-top: 1px solid #eee;
 }
 
@@ -149,6 +154,10 @@
 
 .today-expense-subcategory-header:hover {
   background: #f7f7f7;
+}
+
+.today-expense-subcategory-header strong {
+  font-weight: 700;
 }
 
 .today-expense-subcategory-header strong:first-child::before {
@@ -185,6 +194,14 @@
 .today-expense-subcategory-header strong:last-child,
 .today-expense-category-total strong {
   white-space: nowrap;
+}
+
+.today-expense-sub-subcategory-item.others {
+  cursor: default;
+}
+
+.today-expense-sub-subcategory-item.others:hover {
+  background: transparent;
 }
 
 /* Mobile */
