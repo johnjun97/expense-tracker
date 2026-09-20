@@ -119,19 +119,29 @@ function Expenses() {
         expenseDate.getTime() === yesterday.getTime()
     }
 
-    if (dateFilter === 'this-week') {
+    if (dateFilter === 'this_week') {
       matchesDate =
         expenseDate >= startOfWeek &&
         expenseDate <= today
     }
 
-    if (dateFilter === 'this-month') {
+    if (dateFilter === 'this_month') {
       matchesDate =
         expenseDate.getFullYear() === today.getFullYear() &&
         expenseDate.getMonth() === today.getMonth()
     }
 
-    if (dateFilter === 'custom-range') {
+    if (dateFilter === 'this_year') {
+      matchesDate =
+        expenseDate.getFullYear() === today.getFullYear()
+    }
+
+    if (dateFilter === 'last_year') {
+      matchesDate =
+        expenseDate.getFullYear() === today.getFullYear() - 1
+    }
+
+    if (dateFilter === 'custom') {
       if (fromDate) {
         const selectedFromDate = new Date(
           `${fromDate}T00:00:00`
@@ -308,9 +318,11 @@ function Expenses() {
             <option value="">All dates</option>
             <option value="today">Today</option>
             <option value="yesterday">Yesterday</option>
-            <option value="this-week">This week</option>
-            <option value="this-month">This month</option>
-            <option value="custom-range">Custom range</option>
+            <option value="this_week">This week</option>
+            <option value="this_month">This month</option>
+            <option value="this_year">This year</option>
+            <option value="last_year">Last year</option>
+            <option value="custom">Custom range</option>
           </select>
 
           <select
@@ -329,7 +341,7 @@ function Expenses() {
           </select>
         </div>
 
-        {dateFilter === 'custom-range' && (
+        {dateFilter === 'custom' && (
           <div className="expenses-custom-date">
             <label>
               From
