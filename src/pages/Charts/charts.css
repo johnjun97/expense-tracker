@@ -154,6 +154,30 @@
   cursor: pointer;
 }
 
+.chart-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.breadcrumb-link {
+  cursor: pointer;
+  color: #007bff;
+}
+
+.breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: #777;
+}
+
+.breadcrumb-current {
+  font-weight: 600;
+}
+
 @media (max-width: 600px) {
     .pie-chart svg,
   .pie-chart svg *,

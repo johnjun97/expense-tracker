@@ -221,6 +221,23 @@ function Charts() {
     0
   )
 
+  const currentSpending = filteredExpenses.reduce((total, expense) => {
+    if (
+      selectedCategory &&
+      expense.category?.trim() !== selectedCategory
+    ) {
+      return total
+    }
+
+    if (
+      selectedSubcategory &&
+      expense.subcategory?.trim() !== selectedSubcategory
+    ) {
+      return total
+    }
+
+    return total + Number(expense.amount)
+  }, 0)
 
   const categorySpending = Object.values(
     filteredExpenses.reduce((result, expense) => {
@@ -386,7 +403,11 @@ function Charts() {
 
         <div className="charts-summary">
           <div className="charts-summary-title">
-            <h2>Total Spending</h2>
+            <h2>
+              Total Spending
+              {selectedCategory && ` — ${selectedCategory}`}
+              {selectedSubcategory && ` — ${selectedSubcategory}`}
+            </h2>
 
             <div className="currency-filter-group">
               <select
@@ -407,39 +428,61 @@ function Charts() {
             </div>
 
           </div>
-
           <strong>
-            {selectedCurrency} {totalSpending.toFixed(2)}
+            {selectedCurrency} {currentSpending.toFixed(2)}
           </strong>
         </div>
 
         <div className="chart-card">
           <div className="chart-title">
-            {selectedSubcategory ? (
-              <>
-                <h2>Sub_subcategory ({selectedCategory} &gt; {selectedSubcategory})</h2>
-                <button
-                  type="button"
-                  onClick={() => setSelectedSubcategory(null)}
-                >
-                  Back
-                </button>
-              </>
-            ) : selectedCategory ? (
-              <>
-                <h2>Subcategory ({selectedCategory})</h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory(null)
+            <div className="chart-breadcrumb">
+              <span
+                className="breadcrumb-link"
+                onClick={() => {
+                  setSelectedCategory(null)
+                  setSelectedSubcategory(null)
+                }}
+              >
+                Category
+              </span>
+
+              {selectedCategory && (
+                <>
+                  <span className="breadcrumb-separator"> / </span>
+
+                  <span
+                    className="breadcrumb-link"
+                    onClick={() => setSelectedSubcategory(null)}
+                  >
+                    {selectedCategory}
+                  </span>
+                </>
+              )}
+
+              {selectedSubcategory && (
+                <>
+                  <span className="breadcrumb-separator"> / </span>
+
+                  <span className="breadcrumb-current">
+                    {selectedSubcategory}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {(selectedCategory || selectedSubcategory) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedSubcategory) {
                     setSelectedSubcategory(null)
-                  }}
-                >
-                  Back
-                </button>
-              </>
-            ) : (
-              <h2>Category</h2>
+                  } else {
+                    setSelectedCategory(null)
+                  }
+                }}
+              >
+                Back
+              </button>
             )}
           </div>
 
@@ -628,7 +671,7 @@ function Charts() {
                         goToExpenses(entry.category)
                       }}
                       style={{
-                        cursor: selectedCategory ? 'default' : 'pointer',
+                        cursor: 'pointer',
                       }}
                     >
                       <span
