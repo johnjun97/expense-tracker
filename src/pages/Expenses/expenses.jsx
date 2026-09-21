@@ -9,6 +9,10 @@ import './expenses.css'
 function Expenses() {
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+
+  const PAGE_SIZE = 30
 
   const [error, setError] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
@@ -173,6 +177,7 @@ function Expenses() {
         .select('*')
         .order('expense_date', { ascending: false })
         .order('created_at', { ascending: false })
+        .range(0, PAGE_SIZE - 1)
 
       if (error) {
         console.error('Failed to load expenses:', error)
@@ -182,6 +187,8 @@ function Expenses() {
       }
 
       setExpenses(data)
+
+      setHasMore(data.length === PAGE_SIZE)
 
       const uniqueCategories = []
       const seen = new Set()
@@ -209,6 +216,57 @@ function Expenses() {
 
     loadExpenses()
   }, [])
+
+  async function loadMoreExpenses() {
+    if (loadingMore || !hasMore) {
+      return
+    }
+
+    setLoadingMore(true)
+
+    const from = expenses.length
+    const to = from + PAGE_SIZE - 1
+
+    const { data, error } = await supabase
+      .from('expenses_tracker_expenses')
+      .select('*')
+      .order('expense_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) {
+      console.error('Failed to load more expenses:', error)
+      setError(error.message)
+      setLoadingMore(false)
+      return
+    }
+
+    setExpenses((currentExpenses) => [
+      ...currentExpenses,
+      ...data,
+    ])
+
+    setHasMore(data.length === PAGE_SIZE)
+    setLoadingMore(false)
+  }
+
+  useEffect(() => {
+    function handleScroll() {
+      const nearBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 300
+
+      if (nearBottom) {
+        loadMoreExpenses()
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [expenses.length, loadingMore, hasMore])
 
   useEffect(() => {
     setSearch(urlSearch)
