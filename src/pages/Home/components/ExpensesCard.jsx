@@ -97,94 +97,98 @@ function ExpensesCard({
             }
             actions={
                 <div className="today-expenses-filter">
-                    <label htmlFor="date-filter">
-                        Date
-                    </label>
+                    <div className="today-expenses-filter-group">
+                        <label htmlFor="date-filter">
+                            Date:
+                        </label>
 
-                    <select
-                        id="date-filter"
-                        value={dateFilter}
-                        onChange={(event) =>
-                            setDateFilter(event.target.value)
-                        }
-                    >
-                        <option value="today">
-                            Today
-                        </option>
-
-                        <option value="yesterday">
-                            Yesterday
-                        </option>
-
-                        <option value="this_week">
-                            This Week
-                        </option>
-
-                        <option value="this_month">
-                            This Month
-                        </option>
-
-                        <option value="this_year">
-                            This Year
-                        </option>
-
-                        <option value="last_year">
-                            Last Year
-                        </option>
-
-                        <option value="custom">
-                            Custom Range
-                        </option>
-                    </select>
-
-                    {dateFilter === 'custom' && (
-                        <>
-                            <input
-                                type="date"
-                                value={customStartDate}
-                                onChange={(event) =>
-                                    setCustomStartDate(
-                                        event.target.value
-                                    )
-                                }
-                            />
-
-                            <span>to</span>
-
-                            <input
-                                type="date"
-                                value={customEndDate}
-                                onChange={(event) =>
-                                    setCustomEndDate(
-                                        event.target.value
-                                    )
-                                }
-                            />
-                        </>
-                    )}
-
-                    <label htmlFor="currency-filter">
-                        Currency
-                    </label>
-
-                    <select
-                        id="currency-filter"
-                        value={currencyFilter || ''}
-                        onChange={(event) =>
-                            setCurrencyFilter(
-                                event.target.value
-                            )
-                        }
-                    >
-                        {currencies.map((currency) => (
-                            <option
-                                key={currency}
-                                value={currency}
-                            >
-                                {currency}
+                        <select
+                            id="date-filter"
+                            value={dateFilter}
+                            onChange={(event) =>
+                                setDateFilter(event.target.value)
+                            }
+                        >
+                            <option value="today">
+                                Today
                             </option>
-                        ))}
-                    </select>
+
+                            <option value="yesterday">
+                                Yesterday
+                            </option>
+
+                            <option value="this_week">
+                                This Week
+                            </option>
+
+                            <option value="this_month">
+                                This Month
+                            </option>
+
+                            <option value="this_year">
+                                This Year
+                            </option>
+
+                            <option value="last_year">
+                                Last Year
+                            </option>
+
+                            <option value="custom">
+                                Custom Range
+                            </option>
+                        </select>
+
+                        {dateFilter === 'custom' && (
+                            <>
+                                <input
+                                    type="date"
+                                    value={customStartDate}
+                                    onChange={(event) =>
+                                        setCustomStartDate(
+                                            event.target.value
+                                        )
+                                    }
+                                />
+
+                                <span>to</span>
+
+                                <input
+                                    type="date"
+                                    value={customEndDate}
+                                    onChange={(event) =>
+                                        setCustomEndDate(
+                                            event.target.value
+                                        )
+                                    }
+                                />
+                            </>
+                        )}
+                    </div>
+
+                    <div className="today-expenses-filter-group">
+                        <label htmlFor="currency-filter">
+                            Currency:
+                        </label>
+
+                        <select
+                            id="currency-filter"
+                            value={currencyFilter || ''}
+                            onChange={(event) =>
+                                setCurrencyFilter(
+                                    event.target.value
+                                )
+                            }
+                        >
+                            {currencies.map((currency) => (
+                                <option
+                                    key={currency}
+                                    value={currency}
+                                >
+                                    {currency}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             }
         >

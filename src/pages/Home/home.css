@@ -26,10 +26,19 @@
 
 /* Filters */
 
+/* Filters */
+
 .today-expenses-filter {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
+}
+
+.today-expenses-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .today-expenses-filter label {
@@ -206,6 +215,8 @@
 
 /* Mobile */
 
+/* Mobile */
+
 @media (max-width: 768px) {
   .home-content {
     padding: 24px 16px;
@@ -216,11 +227,36 @@
   }
 
   .card-header {
+    flex-direction: column;
     align-items: flex-start;
+    gap: 10px;
   }
 
   .today-expenses-filter {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .today-expenses-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .today-expenses-filter-group label {
     flex-shrink: 0;
+  }
+
+  .today-expenses-filter-group select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .today-expenses-filter input[type='date'] {
+    min-width: 0;
   }
 
   .today-expense-category-header {
