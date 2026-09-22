@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Navbar/Navbar'
 import Loading from '../../components/Loading/Loading'
 import ExpensesCard from './components/ExpensesCard'
+import ExpensesChartCard from './components/ExpensesChartCard'
 import './home.css'
 
 function Home() {
@@ -202,6 +203,8 @@ function Home() {
               setCustomEndDate
             }
           />
+
+<ExpensesChartCard />
         </div>
       </main>
     </>
