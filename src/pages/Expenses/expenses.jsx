@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Navbar/Navbar'
@@ -11,6 +11,8 @@ function Expenses() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
+
+  const loadingMoreRef = useRef(false)
 
   const PAGE_SIZE = 30
 
@@ -218,10 +220,11 @@ function Expenses() {
   }, [])
 
   async function loadMoreExpenses() {
-    if (loadingMore || !hasMore) {
+    if (loadingMoreRef.current || !hasMore) {
       return
     }
 
+    loadingMoreRef.current = true
     setLoadingMore(true)
 
     const from = expenses.length
@@ -237,6 +240,7 @@ function Expenses() {
     if (error) {
       console.error('Failed to load more expenses:', error)
       setError(error.message)
+      loadingMoreRef.current = false
       setLoadingMore(false)
       return
     }
@@ -247,6 +251,8 @@ function Expenses() {
     ])
 
     setHasMore(data.length === PAGE_SIZE)
+
+    loadingMoreRef.current = false
     setLoadingMore(false)
   }
 
