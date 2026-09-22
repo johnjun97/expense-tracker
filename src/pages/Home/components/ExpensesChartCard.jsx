@@ -327,8 +327,57 @@ function ExpensesChartCard() {
                 <div className="expenses-chart-header">
                     <div>
                         <h2>Expenses Overview</h2>
-                        <p>Daily spending</p>
+
+                        <p>
+                            {[
+                                'last_6_months',
+                                'this_year',
+                                'last_year',
+                                'all_time',
+                            ].includes(chartFilter)
+                                ? 'Monthly spending'
+                                : 'Daily spending'}
+                        </p>
                     </div>
+
+                    <select
+                        value={chartFilter}
+                        onChange={(e) =>
+                            setChartFilter(e.target.value)
+                        }
+                    >
+                        <option value="last_7_days">
+                            Last 7 Days
+                        </option>
+
+                        <option value="this_month">
+                            This Month
+                        </option>
+
+                        <option value="last_month">
+                            Last Month
+                        </option>
+
+                        <option value="this_quarter">
+                            This Quarter
+                        </option>
+
+                        <option value="last_6_months">
+                            Last 6 Months
+                        </option>
+
+                        <option value="this_year">
+                            This Year
+                        </option>
+
+                        <option value="last_year">
+                            Last Year
+                        </option>
+
+                        <option value="all_time">
+                            All Time
+                        </option>
+                    </select>
                 </div>
 
                 <p className="expenses-chart-error">
@@ -343,7 +392,17 @@ function ExpensesChartCard() {
             <div className="expenses-chart-header">
                 <div>
                     <h2>Expenses Overview</h2>
-                    <p>Daily spending</p>
+
+                    <p>
+                        {[
+                            'last_6_months',
+                            'this_year',
+                            'last_year',
+                            'all_time',
+                        ].includes(chartFilter)
+                            ? 'Monthly spending'
+                            : 'Daily spending'}
+                    </p>
                 </div>
 
                 <select
@@ -391,69 +450,80 @@ function ExpensesChartCard() {
                     Loading...
                 </div>
             ) : (
-                <div className="expenses-chart">
-                    <ResponsiveContainer
-                        width="100%"
-                        height={300}
-                    >
-                        <BarChart
-                            data={chartData}
-                            margin={{
-                                top: 10,
-                                right: 10,
-                                left: 0,
-                                bottom: 0,
-                            }}
+                <>
+                    <div className="expenses-chart">
+                        <ResponsiveContainer
+                            width="100%"
+                            height={300}
                         >
-                            <CartesianGrid
-                                strokeDasharray="3 3"
-                            />
-
-                            <XAxis
-                                dataKey="label"
-                                tickLine={false}
-                            />
-
-                            <YAxis
-                                tickLine={false}
-                                axisLine={false}
-                            />
-
-                            <Tooltip
-                                formatter={(value) => [
-                                    `RM ${Number(value).toFixed(2)}`,
-                                    'Expenses',
-                                ]}
-                            />
-
-                            <Bar
-                                dataKey="amount"
-                                name="Expenses"
-                                radius={[4, 4, 0, 0]}
+                            <BarChart
+                                data={chartData}
+                                margin={{
+                                    top: 10,
+                                    right: 10,
+                                    left: 0,
+                                    bottom: 0,
+                                }}
                             >
-                                {chartData.map((entry, index) => {
-                                    const maxAmount = Math.max(
-                                        ...chartData.map((item) => item.amount)
-                                    )
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                />
 
-                                    const intensity =
-                                        maxAmount === 0
-                                            ? 0
-                                            : entry.amount / maxAmount
+                                <XAxis
+                                    dataKey="label"
+                                    tickLine={false}
+                                />
 
-                                    const lightness = 80 - intensity * 45
+                                <YAxis
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
 
-                                    return (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={`hsl(220, 70%, ${lightness}%)`}
-                                        />
-                                    )
-                                })}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
+                                <Tooltip
+                                    formatter={(value) => [
+                                        `RM ${Number(value).toFixed(2)}`,
+                                        'Expenses',
+                                    ]}
+                                />
+
+                                <Bar
+                                    dataKey="amount"
+                                    name="Expenses"
+                                    radius={[4, 4, 0, 0]}
+                                >
+                                    {chartData.map(
+                                        (entry, index) => {
+                                            const maxAmount =
+                                                Math.max(
+                                                    ...chartData.map(
+                                                        (item) =>
+                                                            item.amount
+                                                    )
+                                                )
+
+                                            const intensity =
+                                                maxAmount === 0
+                                                    ? 0
+                                                    : entry.amount /
+                                                    maxAmount
+
+                                            const lightness =
+                                                80 -
+                                                intensity * 45
+
+                                            return (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={`hsl(220, 70%, ${lightness}%)`}
+                                                />
+                                            )
+                                        }
+                                    )}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </>
             )}
         </div>
     )

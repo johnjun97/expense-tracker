@@ -49,3 +49,21 @@
 .expenses-chart-error {
   color: #d32f2f;
 }
+
+.expenses-chart-data {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.expenses-chart-data-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.expenses-chart-data-row span:last-child {
+  font-weight: 600;
+}
