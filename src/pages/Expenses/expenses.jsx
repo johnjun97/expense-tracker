@@ -245,10 +245,20 @@ function Expenses() {
       return
     }
 
-    setExpenses((currentExpenses) => [
-      ...currentExpenses,
-      ...data,
-    ])
+    setExpenses((currentExpenses) => {
+      const existingIds = new Set(
+        currentExpenses.map((expense) => expense.id)
+      )
+
+      const newExpenses = data.filter(
+        (expense) => !existingIds.has(expense.id)
+      )
+
+      return [
+        ...currentExpenses,
+        ...newExpenses,
+      ]
+    })
 
     setHasMore(data.length === PAGE_SIZE)
 
