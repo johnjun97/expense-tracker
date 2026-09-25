@@ -14,7 +14,7 @@ import './ExpensesChartCard.css'
 
 function ExpensesChartCard() {
     const [chartFilter, setChartFilter] =
-        useState('last_7_days')
+        useState('this_week')
 
     const [expenses, setExpenses] = useState([])
     const [loading, setLoading] = useState(true)
@@ -32,11 +32,35 @@ function ExpensesChartCard() {
             const endDate = new Date(today)
 
             switch (chartFilter) {
-                case 'last_7_days':
+
+                case 'this_week': {
+                    const day = startDate.getDay()
+                    const daysSinceMonday =
+                        day === 0 ? 6 : day - 1
+
                     startDate.setDate(
-                        startDate.getDate() - 6
+                        startDate.getDate() - daysSinceMonday
                     )
+
                     break
+                }
+
+                case 'last_week': {
+                    const day = startDate.getDay()
+                    const daysSinceMonday =
+                        day === 0 ? 6 : day - 1
+
+                    startDate.setDate(
+                        startDate.getDate() - daysSinceMonday - 7
+                    )
+
+                    endDate.setTime(startDate.getTime())
+                    endDate.setDate(
+                        endDate.getDate() + 6
+                    )
+
+                    break
+                }
 
                 case 'this_month':
                     startDate.setDate(1)
@@ -94,9 +118,7 @@ function ExpensesChartCard() {
                     break
 
                 default:
-                    startDate.setDate(
-                        startDate.getDate() - 6
-                    )
+                    break
             }
 
             const formatDate = (date) => {
@@ -149,11 +171,51 @@ function ExpensesChartCard() {
         let groupByMonth = false
 
         switch (chartFilter) {
-            case 'last_7_days':
+            case 'this_week': {
+                const day = startDate.getDay()
+                const daysSinceMonday =
+                    day === 0 ? 6 : day - 1
+
                 startDate.setDate(
-                    startDate.getDate() - 6
+                    startDate.getDate() - daysSinceMonday
                 )
+
                 break
+            }
+
+            case 'last_week': {
+                const day = startDate.getDay()
+                const daysSinceMonday =
+                    day === 0 ? 6 : day - 1
+
+                startDate.setDate(
+                    startDate.getDate() - daysSinceMonday - 7
+                )
+
+                endDate.setTime(startDate.getTime())
+                endDate.setDate(
+                    endDate.getDate() + 6
+                )
+
+                break
+            }
+
+            case 'last_week': {
+                const day = startDate.getDay()
+                const daysSinceMonday =
+                    day === 0 ? 6 : day - 1
+
+                startDate.setDate(
+                    startDate.getDate() - daysSinceMonday - 7
+                )
+
+                endDate.setTime(startDate.getTime())
+                endDate.setDate(
+                    endDate.getDate() + 6
+                )
+
+                break
+            }
 
             case 'this_month':
                 startDate.setDate(1)
@@ -352,9 +414,12 @@ function ExpensesChartCard() {
                         onChange={(e) =>
                             setChartFilter(e.target.value)
                         }
-                    >
-                        <option value="last_7_days">
-                            Last 7 Days
+                    ><option value="this_week">
+                            This Week
+                        </option>
+
+                        <option value="last_week">
+                            Last Week
                         </option>
 
                         <option value="this_month">
@@ -418,8 +483,12 @@ function ExpensesChartCard() {
                         setChartFilter(e.target.value)
                     }
                 >
-                    <option value="last_7_days">
-                        Last 7 Days
+                    <option value="this_week">
+                        This Week
+                    </option>
+
+                    <option value="last_week">
+                        Last Week
                     </option>
 
                     <option value="this_month">

@@ -1,18 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../../lib/supabase'
 import Card from '../../../components/Card/Card'
 
-function ExpensesCard({
-    expenses,
-    currencyFilter,
-    setCurrencyFilter,
-    dateFilter,
-    setDateFilter,
-    customStartDate,
-    setCustomStartDate,
-    customEndDate,
-    setCustomEndDate,
-}) {
+
+function ExpensesCard() {
+    const [expenses, setExpenses] = useState([])
+    const [currencyFilter, setCurrencyFilter] = useState(null)
+    const [dateFilter, setDateFilter] = useState('today')
+    const [customStartDate, setCustomStartDate] = useState('')
+    const [customEndDate, setCustomEndDate] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
+
     const [expandedCategories, setExpandedCategories] =
         useState({})
 
@@ -32,6 +32,195 @@ function ExpensesCard({
             )
         ),
     ]
+
+    useEffect(() => {
+        async function loadExpenses() {
+            setLoading(true)
+            setError('')
+
+            const today = new Date()
+
+            const formatDate = (date) =>
+                date.toISOString().split('T')[0]
+
+            let startDate
+            let endDate
+
+            switch (dateFilter) {
+                case 'today':
+                    startDate = new Date(today)
+                    endDate = new Date(today)
+                    break
+
+                case 'yesterday':
+                    startDate = new Date(today)
+                    startDate.setDate(startDate.getDate() - 1)
+                    endDate = new Date(startDate)
+                    break
+
+                case 'this_week': {
+                    startDate = new Date(today)
+
+                    const day = startDate.getDay()
+                    const daysSinceMonday =
+                        day === 0 ? 6 : day - 1
+
+                    startDate.setDate(
+                        startDate.getDate() - daysSinceMonday
+                    )
+
+                    endDate = new Date(today)
+                    break
+                }
+
+                case 'last_week': {
+                    startDate = new Date(today)
+
+                    const day = startDate.getDay()
+                    const daysSinceMonday =
+                        day === 0 ? 6 : day - 1
+
+                    startDate.setDate(
+                        startDate.getDate() - daysSinceMonday - 7
+                    )
+
+                    endDate = new Date(startDate)
+                    endDate.setDate(
+                        endDate.getDate() + 6
+                    )
+
+                    break
+                }
+
+                case 'last_week': {
+                    startDate = new Date(today)
+
+                    const day = startDate.getDay()
+                    const daysSinceMonday =
+                        day === 0 ? 6 : day - 1
+
+                    startDate.setDate(
+                        startDate.getDate() - daysSinceMonday - 7
+                    )
+
+                    endDate = new Date(startDate)
+                    endDate.setDate(
+                        endDate.getDate() + 6
+                    )
+
+                    break
+                }
+
+                case 'this_month':
+                    startDate = new Date(
+                        today.getFullYear(),
+                        today.getMonth(),
+                        1
+                    )
+
+                    endDate = new Date(today)
+                    break
+
+                case 'last_month':
+                    startDate = new Date(
+                        today.getFullYear(),
+                        today.getMonth() - 1,
+                        1
+                    )
+
+                    endDate = new Date(
+                        today.getFullYear(),
+                        today.getMonth(),
+                        0
+                    )
+
+                    break
+
+                case 'this_year':
+                    startDate = new Date(
+                        today.getFullYear(),
+                        0,
+                        1
+                    )
+
+                    endDate = new Date(today)
+                    break
+
+                case 'last_year':
+                    startDate = new Date(
+                        today.getFullYear() - 1,
+                        0,
+                        1
+                    )
+
+                    endDate = new Date(
+                        today.getFullYear() - 1,
+                        11,
+                        31
+                    )
+                    break
+
+                case 'custom':
+                    if (!customStartDate || !customEndDate) {
+                        setExpenses([])
+                        setLoading(false)
+                        return
+                    }
+
+                    startDate = new Date(customStartDate)
+                    endDate = new Date(customEndDate)
+                    break
+
+                default:
+                    startDate = new Date(today)
+                    endDate = new Date(today)
+            }
+
+            const start = formatDate(startDate)
+            const end = formatDate(endDate)
+
+            const { data, error } = await supabase
+                .from('expenses_tracker_expenses')
+                .select('*')
+                .gte('expense_date', start)
+                .lte('expense_date', end)
+                .order('created_at', {
+                    ascending: false,
+                })
+
+            if (error) {
+                console.error(
+                    'Failed to load expenses:',
+                    error
+                )
+
+                setError(error.message)
+                setExpenses([])
+                setLoading(false)
+                return
+            }
+
+            const loadedExpenses = data || []
+
+            setExpenses(loadedExpenses)
+
+            if (loadedExpenses.length > 0) {
+                setCurrencyFilter(
+                    loadedExpenses[0].currency || 'MYR'
+                )
+            } else {
+                setCurrencyFilter(null)
+            }
+
+            setLoading(false)
+        }
+
+        loadExpenses()
+    }, [
+        dateFilter,
+        customStartDate,
+        customEndDate,
+    ])
 
     const filteredExpenses = expenses.filter((expense) => {
         const currency = expense.currency || 'MYR'
@@ -88,6 +277,22 @@ function ExpensesCard({
         return totalB - totalA
     })
 
+    if (loading) {
+        return (
+            <Card title="Expenses">
+                <p>Loading...</p>
+            </Card>
+        )
+    }
+
+    if (error) {
+        return (
+            <Card title="Expenses">
+                <p>Error: {error}</p>
+            </Card>
+        )
+    }
+
     return (
         <Card
             title={
@@ -121,10 +326,17 @@ function ExpensesCard({
                                 This Week
                             </option>
 
+                            <option value="last_week">
+                                Last Week
+                            </option>
+
                             <option value="this_month">
                                 This Month
                             </option>
 
+                            <option value="last_month">
+                                Last Month
+                            </option>
                             <option value="this_year">
                                 This Year
                             </option>
@@ -192,6 +404,8 @@ function ExpensesCard({
                 </div>
             }
         >
+
+
             <div className="today-expenses-total">
                 {Object.entries(
                     totalsByCurrency
