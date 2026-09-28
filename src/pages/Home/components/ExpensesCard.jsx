@@ -92,25 +92,6 @@ function ExpensesCard() {
                     break
                 }
 
-                case 'last_week': {
-                    startDate = new Date(today)
-
-                    const day = startDate.getDay()
-                    const daysSinceMonday =
-                        day === 0 ? 6 : day - 1
-
-                    startDate.setDate(
-                        startDate.getDate() - daysSinceMonday - 7
-                    )
-
-                    endDate = new Date(startDate)
-                    endDate.setDate(
-                        endDate.getDate() + 6
-                    )
-
-                    break
-                }
-
                 case 'this_month':
                     startDate = new Date(
                         today.getFullYear(),
@@ -504,7 +485,7 @@ function ExpensesCard() {
                                                 toggleCategory(category)
                                             } else {
                                                 navigate(
-                                                    `/expenses?date=${dateFilter}&search=${encodeURIComponent(category)}`
+                                                    `/expenses?date=${dateFilter}&search=${encodeURIComponent(category)}&level=category`
                                                 )
                                             }
                                         }}
@@ -641,9 +622,8 @@ function ExpensesCard() {
                                                                                 ? 'others'
                                                                                 : 'sub_subcategory',
                                                                         name:
-                                                                            name ===
-                                                                                '__others__'
-                                                                                ? 'Others'
+                                                                            name === '__others__'
+                                                                                ? 'Uncategorized'
                                                                                 : name,
                                                                         amount:
                                                                             expenses.reduce(
@@ -677,7 +657,7 @@ function ExpensesCard() {
                                                                     className="today-expense-subcategory-header"
                                                                     onClick={() =>
                                                                         navigate(
-                                                                            `/expenses?date=${dateFilter}&search=${encodeURIComponent(subcategory)}`
+                                                                            `/expenses?date=${dateFilter}&search=${encodeURIComponent(subcategory)}&level=subcategory`
                                                                         )
                                                                     }
                                                                 >
@@ -708,7 +688,7 @@ function ExpensesCard() {
                                                                                                 key="others"
                                                                                             >
                                                                                                 <span>
-                                                                                                    Others
+                                                                                                    Uncategorized
                                                                                                 </span>
 
                                                                                                 <strong>
@@ -735,7 +715,7 @@ function ExpensesCard() {
                                                                                                 navigate(
                                                                                                     `/expenses?date=${dateFilter}&search=${encodeURIComponent(
                                                                                                         item.expense.sub_subcategory
-                                                                                                    )}`
+                                                                                                    )}&level=sub_subcategory`
                                                                                                 )
                                                                                             }
                                                                                         >

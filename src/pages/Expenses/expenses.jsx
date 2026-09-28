@@ -25,6 +25,7 @@ function Expenses() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const urlSearch = searchParams.get('search') || ''
+  const urlLevel = searchParams.get('level') || ''
   const urlDate = searchParams.get('date') || ''
   const urlFrom = searchParams.get('from') || ''
   const urlTo = searchParams.get('to') || ''
@@ -82,10 +83,29 @@ function Expenses() {
       expense.note?.toLowerCase().includes(searchText) ||
       amountText.includes(searchText) ||
       formattedDate.includes(searchText) ||
-      searchableDate.includes(searchText)
+      searchableDate.includes(searchText) ||
+      (
+        searchText === 'uncategorized' &&
+        (
+          urlLevel === 'category'
+            ? !expense.category?.trim()
+            : urlLevel === 'subcategory'
+              ? !expense.subcategory?.trim()
+              : urlLevel === 'sub_subcategory'
+                ? !expense.sub_subcategory?.trim()
+                : (
+                  !expense.category?.trim() ||
+                  !expense.subcategory?.trim() ||
+                  !expense.sub_subcategory?.trim()
+                )
+        )
+      )
 
     const matchesCategory =
-      !categoryFilter || expense.category === categoryFilter
+      !categoryFilter ||
+      (categoryFilter === 'Uncategorized'
+        ? !expense.category?.trim()
+        : expense.category === categoryFilter)
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -172,52 +192,59 @@ function Expenses() {
     return matchesSearch && matchesCategory && matchesDate
   })
 
-  useEffect(() => {
-    async function loadExpenses() {
-      const { data, error } = await supabase
-        .from('expenses_tracker_expenses')
-        .select('*')
-        .order('expense_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .range(0, PAGE_SIZE - 1)
+useEffect(() => {
+  async function loadExpenses() {
+    let query = supabase
+      .from('expenses_tracker_expenses')
+      .select('*')
+      .order('expense_date', { ascending: false })
+      .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('Failed to load expenses:', error)
-        setError(error.message)
-        setLoading(false)
-        return
-      }
-
-      setExpenses(data)
-
-      setHasMore(data.length === PAGE_SIZE)
-
-      const uniqueCategories = []
-      const seen = new Set()
-
-      for (const expense of data) {
-        const category = expense.category?.trim()
-
-        if (!category) {
-          continue
-        }
-
-        const key = category.toLowerCase()
-
-        if (seen.has(key)) {
-          continue
-        }
-
-        seen.add(key)
-        uniqueCategories.push(category)
-      }
-
-      setCategorySuggestions(uniqueCategories)
-      setLoading(false)
+    // When coming from Charts with a search,
+    // load all records so older matching records are not missed.
+    if (!urlSearch) {
+      query = query.range(0, PAGE_SIZE - 1)
     }
 
-    loadExpenses()
-  }, [])
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Failed to load expenses:', error)
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    setExpenses(data)
+
+    setHasMore(!urlSearch && data.length === PAGE_SIZE)
+
+    const uniqueCategories = []
+    const seen = new Set()
+
+    for (const expense of data) {
+      const category = expense.category?.trim()
+
+      if (!category) {
+        continue
+      }
+
+      const key = category.toLowerCase()
+
+      if (seen.has(key)) {
+        continue
+      }
+
+      seen.add(key)
+      uniqueCategories.push(category)
+    }
+
+    setCategorySuggestions(uniqueCategories)
+    setLoading(false)
+  }
+
+  loadExpenses()
+}, [urlSearch])
 
   async function loadMoreExpenses() {
     if (loadingMoreRef.current || !hasMore) {

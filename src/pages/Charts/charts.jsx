@@ -144,8 +144,16 @@ function Charts() {
   const [selectedSubcategory, setSelectedSubcategory] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600)
 
-  function goToExpenses(search) {
-    navigate(`/expenses?search=${encodeURIComponent(search)}`)
+  function goToExpenses(search, level = '') {
+    const params = new URLSearchParams()
+
+    params.set('search', search)
+
+    if (level) {
+      params.set('level', level)
+    }
+
+    navigate(`/expenses?${params.toString()}`)
   }
 
   useEffect(() => {
@@ -222,18 +230,25 @@ function Charts() {
   )
 
   const currentSpending = filteredExpenses.reduce((total, expense) => {
-    if (
-      selectedCategory &&
-      expense.category?.trim() !== selectedCategory
-    ) {
-      return total
-    }
+    if (selectedCategory) {
+      const matchesCategory =
+        selectedCategory === 'Uncategorized'
+          ? !expense.category?.trim()
+          : expense.category?.trim() === selectedCategory
 
-    if (
-      selectedSubcategory &&
-      expense.subcategory?.trim() !== selectedSubcategory
-    ) {
-      return total
+      if (!matchesCategory) {
+        return total
+      }
+    }
+    if (selectedSubcategory) {
+      const matchesSubcategory =
+        selectedSubcategory === 'Uncategorized'
+          ? !expense.subcategory?.trim()
+          : expense.subcategory?.trim() === selectedSubcategory
+
+      if (!matchesSubcategory) {
+        return total
+      }
     }
 
     return total + Number(expense.amount)
@@ -241,11 +256,7 @@ function Charts() {
 
   const categorySpending = Object.values(
     filteredExpenses.reduce((result, expense) => {
-      const category = expense.category?.trim()
-
-      if (!category) {
-        return result
-      }
+      const category = expense.category?.trim() || 'Uncategorized'
 
       if (!result[category]) {
         result[category] = {
@@ -263,11 +274,16 @@ function Charts() {
   const subcategorySpending = selectedCategory
     ? Object.values(
       filteredExpenses.reduce((result, expense) => {
-        if (expense.category?.trim() !== selectedCategory) {
+        const matchesCategory =
+          selectedCategory === 'Uncategorized'
+            ? !expense.category?.trim()
+            : expense.category?.trim() === selectedCategory
+
+        if (!matchesCategory) {
           return result
         }
 
-        const subcategory = expense.subcategory?.trim() || 'Others'
+        const subcategory = expense.subcategory?.trim() || 'Uncategorized'
 
         if (!result[subcategory]) {
           result[subcategory] = {
@@ -283,36 +299,39 @@ function Charts() {
     ).sort((a, b) => b.amount - a.amount)
     : []
 
-  const subsubcategorySpending = selectedSubcategory
-    ? Object.values(
-      filteredExpenses.reduce((result, expense) => {
-        if (
-          expense.category?.trim() !== selectedCategory ||
-          expense.subcategory?.trim() !== selectedSubcategory
-        ) {
-          return result
-        }
+const subsubcategorySpending = selectedSubcategory
+  ? Object.values(
+    filteredExpenses.reduce((result, expense) => {
+      const matchesCategory =
+        selectedCategory === 'Uncategorized'
+          ? !expense.category?.trim()
+          : expense.category?.trim() === selectedCategory
 
-        const subsubcategory = expense.sub_subcategory?.trim()
+      const matchesSubcategory =
+        selectedSubcategory === 'Uncategorized'
+          ? !expense.subcategory?.trim()
+          : expense.subcategory?.trim() === selectedSubcategory
 
-        // Do not create an "Others" chart item
-        if (!subsubcategory) {
-          return result
-        }
-
-        if (!result[subsubcategory]) {
-          result[subsubcategory] = {
-            category: subsubcategory,
-            amount: 0,
-          }
-        }
-
-        result[subsubcategory].amount += Number(expense.amount)
-
+      if (!matchesCategory || !matchesSubcategory) {
         return result
-      }, {})
-    ).sort((a, b) => b.amount - a.amount)
-    : []
+      }
+
+      const subsubcategory =
+        expense.sub_subcategory?.trim() || 'Uncategorized'
+
+      if (!result[subsubcategory]) {
+        result[subsubcategory] = {
+          category: subsubcategory,
+          amount: 0,
+        }
+      }
+
+      result[subsubcategory].amount += Number(expense.amount)
+
+      return result
+    }, {})
+  ).sort((a, b) => b.amount - a.amount)
+  : []
 
   // ADD HERE
   const currentChartData =
@@ -520,6 +539,11 @@ function Charts() {
 
                       // Category level
                       if (!selectedCategory) {
+                        if (data.category === 'Uncategorized') {
+                          goToExpenses(data.category, 'category')
+                          return
+                        }
+
                         setSelectedCategory(data.category)
                         return
                       }
@@ -527,14 +551,34 @@ function Charts() {
                       // Subcategory level
                       if (!selectedSubcategory) {
                         const hasSubSubcategory = filteredExpenses.some(
-                          (expense) =>
-                            expense.category?.trim() === selectedCategory &&
-                            expense.subcategory?.trim() === data.category &&
-                            expense.sub_subcategory?.trim()
+                          (expense) => {
+                            const matchesCategory =
+                              selectedCategory === 'Uncategorized'
+                                ? !expense.category?.trim()
+                                : expense.category?.trim() === selectedCategory
+
+                            const matchesSubcategory =
+                              expense.subcategory?.trim() === data.category ||
+                              (
+                                data.category === 'Uncategorized' &&
+                                !expense.subcategory?.trim()
+                              )
+
+                            return (
+                              matchesCategory &&
+                              matchesSubcategory &&
+                              expense.sub_subcategory?.trim()
+                            )
+                          }
                         )
 
                         if (!hasSubSubcategory) {
-                          goToExpenses(data.category)
+                          goToExpenses(
+                            data.category,
+                            data.category === 'Uncategorized'
+                              ? 'subcategory'
+                              : ''
+                          )
                           return
                         }
 
@@ -542,8 +586,13 @@ function Charts() {
                         return
                       }
 
-                      // Sub_subcategory level
-                      goToExpenses(data.category)
+                      // Sub-subcategory level
+                      goToExpenses(
+                        data.category,
+                        data.category === 'Uncategorized'
+                          ? 'sub_subcategory'
+                          : ''
+                      )
                     }}
                     cursor={!isMobile && !selectedCategory ? 'pointer' : 'default'}
                   >
@@ -647,20 +696,45 @@ function Charts() {
                       key={entry.category}
                       onClick={() => {
                         if (!selectedCategory) {
+                          if (entry.category === 'Uncategorized') {
+                            goToExpenses(entry.category, 'category')
+                            return
+                          }
+
                           setSelectedCategory(entry.category)
                           return
                         }
 
                         if (!selectedSubcategory) {
                           const hasSubSubcategory = filteredExpenses.some(
-                            (expense) =>
-                              expense.category?.trim() === selectedCategory &&
-                              expense.subcategory?.trim() === entry.category &&
-                              expense.sub_subcategory?.trim()
+                            (expense) => {
+                              const matchesCategory =
+                                selectedCategory === 'Uncategorized'
+                                  ? !expense.category?.trim()
+                                  : expense.category?.trim() === selectedCategory
+
+                              const matchesSubcategory =
+                                expense.subcategory?.trim() === entry.category ||
+                                (
+                                  entry.category === 'Uncategorized' &&
+                                  !expense.subcategory?.trim()
+                                )
+
+                              return (
+                                matchesCategory &&
+                                matchesSubcategory &&
+                                expense.sub_subcategory?.trim()
+                              )
+                            }
                           )
 
                           if (!hasSubSubcategory) {
-                            goToExpenses(entry.category)
+                            goToExpenses(
+                              entry.category,
+                              entry.category === 'Uncategorized'
+                                ? 'subcategory'
+                                : ''
+                            )
                             return
                           }
 
@@ -668,7 +742,12 @@ function Charts() {
                           return
                         }
 
-                        goToExpenses(entry.category)
+                        goToExpenses(
+                          entry.category,
+                          entry.category === 'Uncategorized'
+                            ? 'sub_subcategory'
+                            : ''
+                        )
                       }}
                       style={{
                         cursor: 'pointer',
