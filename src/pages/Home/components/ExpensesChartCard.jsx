@@ -33,17 +33,11 @@ function ExpensesChartCard() {
 
             switch (chartFilter) {
 
-                case 'this_week': {
-                    const day = startDate.getDay()
-                    const daysSinceMonday =
-                        day === 0 ? 6 : day - 1
-
+                case 'this_week':
                     startDate.setDate(
-                        startDate.getDate() - daysSinceMonday
+                        startDate.getDate() - 6
                     )
-
                     break
-                }
 
                 case 'last_week': {
                     const day = startDate.getDay()
@@ -171,34 +165,11 @@ function ExpensesChartCard() {
         let groupByMonth = false
 
         switch (chartFilter) {
-            case 'this_week': {
-                const day = startDate.getDay()
-                const daysSinceMonday =
-                    day === 0 ? 6 : day - 1
-
+            case 'this_week':
                 startDate.setDate(
-                    startDate.getDate() - daysSinceMonday
+                    startDate.getDate() - 6
                 )
-
                 break
-            }
-
-            case 'last_week': {
-                const day = startDate.getDay()
-                const daysSinceMonday =
-                    day === 0 ? 6 : day - 1
-
-                startDate.setDate(
-                    startDate.getDate() - daysSinceMonday - 7
-                )
-
-                endDate.setTime(startDate.getTime())
-                endDate.setDate(
-                    endDate.getDate() + 6
-                )
-
-                break
-            }
 
             case 'last_week': {
                 const day = startDate.getDay()
@@ -415,7 +386,7 @@ function ExpensesChartCard() {
                             setChartFilter(e.target.value)
                         }
                     ><option value="this_week">
-                            This Week
+                            Last 7 Days
                         </option>
 
                         <option value="last_week">
@@ -484,7 +455,7 @@ function ExpensesChartCard() {
                     }
                 >
                     <option value="this_week">
-                        This Week
+                        Last 7 Days
                     </option>
 
                     <option value="last_week">
