@@ -363,7 +363,13 @@ function ExpensesChartCard() {
         )
     }, [expenses, chartFilter])
 
-
+    const totalAmount = useMemo(() => {
+        return expenses.reduce(
+            (total, expense) =>
+                total + (Number(expense.amount) || 0),
+            0
+        )
+    }, [expenses])
 
     if (error) {
         return (
@@ -373,14 +379,7 @@ function ExpensesChartCard() {
                         <h2>Expenses Overview</h2>
 
                         <p>
-                            {[
-                                'last_6_months',
-                                'this_year',
-                                'last_year',
-                                'all_time',
-                            ].includes(chartFilter)
-                                ? 'Monthly spending'
-                                : 'Daily spending'}
+                            Total spending · RM {totalAmount.toFixed(2)}
                         </p>
                     </div>
 
@@ -439,16 +438,8 @@ function ExpensesChartCard() {
             <div className="expenses-chart-header">
                 <div>
                     <h2>Expenses Overview</h2>
-
                     <p>
-                        {[
-                            'last_6_months',
-                            'this_year',
-                            'last_year',
-                            'all_time',
-                        ].includes(chartFilter)
-                            ? 'Monthly spending'
-                            : 'Daily spending'}
+                        Total spending · RM {totalAmount.toFixed(2)}
                     </p>
                 </div>
 
@@ -537,30 +528,30 @@ function ExpensesChartCard() {
                                     ]}
                                 />
 
-                       <Bar
-    dataKey="amount"
-    name="Expenses"
-    radius={[4, 4, 0, 0]}
-    cursor="pointer"
-    onClick={(data) => {
-        if (!data?.date) {
-            return
-        }
+                                <Bar
+                                    dataKey="amount"
+                                    name="Expenses"
+                                    radius={[4, 4, 0, 0]}
+                                    cursor="pointer"
+                                    onClick={(data) => {
+                                        if (!data?.date) {
+                                            return
+                                        }
 
-        const level = [
-            'last_6_months',
-            'this_year',
-            'last_year',
-            'all_time',
-        ].includes(chartFilter)
-            ? 'month'
-            : 'date'
+                                        const level = [
+                                            'last_6_months',
+                                            'this_year',
+                                            'last_year',
+                                            'all_time',
+                                        ].includes(chartFilter)
+                                            ? 'month'
+                                            : 'date'
 
-        navigate(
-            `/expenses?search=${encodeURIComponent(data.date)}&level=${level}`
-        )
-    }}
->
+                                        navigate(
+                                            `/expenses?search=${encodeURIComponent(data.date)}&level=${level}`
+                                        )
+                                    }}
+                                >
                                     {chartData.map(
                                         (entry, index) => {
                                             const maxAmount =
