@@ -106,10 +106,8 @@ const renderPieLabel = ({
   }
 
   // Desktop
-  // Desktop: only show labels for slices > 1%
-  if (percentage <= 1) {
-    return null
-  }
+  // Keep labels invisible for slices <= 1%
+  const isInvisible = percentage <= 1
 
   const radius = outerRadius + 35
 
@@ -126,9 +124,35 @@ const renderPieLabel = ({
       textAnchor={x > cx ? 'start' : 'end'}
       dominantBaseline="central"
       fontSize={12}
+      visibility={isInvisible ? 'hidden' : 'visible'}
     >
       {`${name} — ${selectedCurrency} ${Number(value).toFixed(2)} (${percentage.toFixed(1)}%)`}
     </text>
+  )
+}
+
+const renderPieLabelLine = (props) => {
+  const {
+    points,
+    value,
+    chartTotal,
+  } = props
+
+  const percentage =
+    chartTotal > 0
+      ? (Number(value) / chartTotal) * 100
+      : 0
+
+  if (percentage <= 1 || !points || points.length < 2) {
+    return null
+  }
+
+  return (
+    <path
+      d={`M${points[0].x},${points[0].y}L${points[1].x},${points[1].y}`}
+      stroke="#999"
+      fill="none"
+    />
   )
 }
 
@@ -528,7 +552,12 @@ function Charts() {
                     cy="45%"
                     outerRadius={isMobile ? 160 : 120}
                     activeShape={false}
-                    labelLine={!isMobile}
+labelLine={(props) =>
+  renderPieLabelLine({
+    ...props,
+    chartTotal,
+  })
+}
                     label={(props) =>
                       renderPieLabel({
                         ...props,
