@@ -76,30 +76,41 @@ function Expenses() {
 
     const amountText = Number(expense.amount).toFixed(2)
 
+    const matchesDateSearch =
+      urlLevel === 'date'
+        ? expense.expense_date === searchText
+        : urlLevel === 'month'
+          ? expense.expense_date?.startsWith(searchText)
+          : false
+
     const matchesSearch =
-      expense.category?.toLowerCase().includes(searchText) ||
-      expense.subcategory?.toLowerCase().includes(searchText) ||
-      expense.sub_subcategory?.toLowerCase().includes(searchText) ||
-      expense.note?.toLowerCase().includes(searchText) ||
-      amountText.includes(searchText) ||
-      formattedDate.includes(searchText) ||
-      searchableDate.includes(searchText) ||
-      (
-        searchText === 'uncategorized' &&
-        (
-          urlLevel === 'category'
-            ? !expense.category?.trim()
-            : urlLevel === 'subcategory'
-              ? !expense.subcategory?.trim()
-              : urlLevel === 'sub_subcategory'
-                ? !expense.sub_subcategory?.trim()
-                : (
-                  !expense.category?.trim() ||
-                  !expense.subcategory?.trim() ||
-                  !expense.sub_subcategory?.trim()
-                )
+      urlLevel === 'date' || urlLevel === 'month'
+        ? matchesDateSearch
+        : (
+          expense.category?.toLowerCase().includes(searchText) ||
+          expense.subcategory?.toLowerCase().includes(searchText) ||
+          expense.sub_subcategory?.toLowerCase().includes(searchText) ||
+          expense.note?.toLowerCase().includes(searchText) ||
+          amountText.includes(searchText) ||
+          formattedDate.includes(searchText) ||
+          searchableDate.includes(searchText) ||
+          (
+            searchText === 'uncategorized' &&
+            (
+              urlLevel === 'category'
+                ? !expense.category?.trim()
+                : urlLevel === 'subcategory'
+                  ? !expense.subcategory?.trim()
+                  : urlLevel === 'sub_subcategory'
+                    ? !expense.sub_subcategory?.trim()
+                    : (
+                      !expense.category?.trim() ||
+                      !expense.subcategory?.trim() ||
+                      !expense.sub_subcategory?.trim()
+                    )
+            )
+          )
         )
-      )
 
     const matchesCategory =
       !categoryFilter ||
@@ -192,59 +203,59 @@ function Expenses() {
     return matchesSearch && matchesCategory && matchesDate
   })
 
-useEffect(() => {
-  async function loadExpenses() {
-    let query = supabase
-      .from('expenses_tracker_expenses')
-      .select('*')
-      .order('expense_date', { ascending: false })
-      .order('created_at', { ascending: false })
+  useEffect(() => {
+    async function loadExpenses() {
+      let query = supabase
+        .from('expenses_tracker_expenses')
+        .select('*')
+        .order('expense_date', { ascending: false })
+        .order('created_at', { ascending: false })
 
-    // When coming from Charts with a search,
-    // load all records so older matching records are not missed.
-    if (!urlSearch) {
-      query = query.range(0, PAGE_SIZE - 1)
-    }
+      // When coming from Charts with a search,
+      // load all records so older matching records are not missed.
+      if (!urlSearch) {
+        query = query.range(0, PAGE_SIZE - 1)
+      }
 
-    const { data, error } = await query
+      const { data, error } = await query
 
-    if (error) {
-      console.error('Failed to load expenses:', error)
-      setError(error.message)
+      if (error) {
+        console.error('Failed to load expenses:', error)
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      setExpenses(data)
+
+      setHasMore(!urlSearch && data.length === PAGE_SIZE)
+
+      const uniqueCategories = []
+      const seen = new Set()
+
+      for (const expense of data) {
+        const category = expense.category?.trim()
+
+        if (!category) {
+          continue
+        }
+
+        const key = category.toLowerCase()
+
+        if (seen.has(key)) {
+          continue
+        }
+
+        seen.add(key)
+        uniqueCategories.push(category)
+      }
+
+      setCategorySuggestions(uniqueCategories)
       setLoading(false)
-      return
     }
 
-    setExpenses(data)
-
-    setHasMore(!urlSearch && data.length === PAGE_SIZE)
-
-    const uniqueCategories = []
-    const seen = new Set()
-
-    for (const expense of data) {
-      const category = expense.category?.trim()
-
-      if (!category) {
-        continue
-      }
-
-      const key = category.toLowerCase()
-
-      if (seen.has(key)) {
-        continue
-      }
-
-      seen.add(key)
-      uniqueCategories.push(category)
-    }
-
-    setCategorySuggestions(uniqueCategories)
-    setLoading(false)
-  }
-
-  loadExpenses()
-}, [urlSearch])
+    loadExpenses()
+  }, [urlSearch])
 
   async function loadMoreExpenses() {
     if (loadingMoreRef.current || !hasMore) {

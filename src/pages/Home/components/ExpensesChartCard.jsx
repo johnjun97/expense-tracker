@@ -10,9 +10,13 @@ import {
     ResponsiveContainer,
 } from 'recharts'
 import { supabase } from '../../../lib/supabase'
+import { useNavigate } from 'react-router-dom'
 import './ExpensesChartCard.css'
 
 function ExpensesChartCard() {
+
+    const navigate = useNavigate()
+
     const [chartFilter, setChartFilter] =
         useState('this_week')
 
@@ -533,11 +537,30 @@ function ExpensesChartCard() {
                                     ]}
                                 />
 
-                                <Bar
-                                    dataKey="amount"
-                                    name="Expenses"
-                                    radius={[4, 4, 0, 0]}
-                                >
+                       <Bar
+    dataKey="amount"
+    name="Expenses"
+    radius={[4, 4, 0, 0]}
+    cursor="pointer"
+    onClick={(data) => {
+        if (!data?.date) {
+            return
+        }
+
+        const level = [
+            'last_6_months',
+            'this_year',
+            'last_year',
+            'all_time',
+        ].includes(chartFilter)
+            ? 'month'
+            : 'date'
+
+        navigate(
+            `/expenses?search=${encodeURIComponent(data.date)}&level=${level}`
+        )
+    }}
+>
                                     {chartData.map(
                                         (entry, index) => {
                                             const maxAmount =
