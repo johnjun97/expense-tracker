@@ -136,7 +136,12 @@ const renderPieLabelLine = (props) => {
     points,
     value,
     chartTotal,
+    isMobile,
   } = props
+
+  if (isMobile) {
+    return null
+  }
 
   const percentage =
     chartTotal > 0
@@ -552,12 +557,13 @@ function Charts() {
                     cy="45%"
                     outerRadius={isMobile ? 160 : 120}
                     activeShape={false}
-labelLine={(props) =>
-  renderPieLabelLine({
-    ...props,
-    chartTotal,
-  })
-}
+                    labelLine={(props) =>
+                      renderPieLabelLine({
+                        ...props,
+                        chartTotal,
+                        isMobile,
+                      })
+                    }
                     label={(props) =>
                       renderPieLabel({
                         ...props,
@@ -689,81 +695,83 @@ labelLine={(props) =>
                     />
                   )}
 
-                  <Legend
-                    onClick={(data) => {
-                      if (!data?.value) {
-                        return
-                      }
-
-                      const value = data.value
-
-                      // Category level
-                      if (!selectedCategory) {
-                        if (value === 'Uncategorized') {
-                          goToExpenses(value, 'category')
+                  {!isMobile && (
+                    <Legend
+                      onClick={(data) => {
+                        if (!data?.value) {
                           return
                         }
 
-                        setSelectedCategory(value)
-                        return
-                      }
+                        const value = data.value
 
-                      // Subcategory level
-                      if (!selectedSubcategory) {
-                        const hasSubSubcategory = filteredExpenses.some(
-                          (expense) => {
-                            const matchesCategory =
-                              selectedCategory === 'Uncategorized'
-                                ? !expense.category?.trim()
-                                : expense.category?.trim() === selectedCategory
-
-                            const matchesSubcategory =
-                              expense.subcategory?.trim() === value ||
-                              (
-                                value === 'Uncategorized' &&
-                                !expense.subcategory?.trim()
-                              )
-
-                            return (
-                              matchesCategory &&
-                              matchesSubcategory &&
-                              expense.sub_subcategory?.trim()
-                            )
+                        // Category level
+                        if (!selectedCategory) {
+                          if (value === 'Uncategorized') {
+                            goToExpenses(value, 'category')
+                            return
                           }
-                        )
 
-                        if (!hasSubSubcategory) {
-                          goToExpenses(
-                            value,
-                            value === 'Uncategorized'
-                              ? 'subcategory'
-                              : ''
-                          )
+                          setSelectedCategory(value)
                           return
                         }
 
-                        setSelectedSubcategory(value)
-                        return
-                      }
+                        // Subcategory level
+                        if (!selectedSubcategory) {
+                          const hasSubSubcategory = filteredExpenses.some(
+                            (expense) => {
+                              const matchesCategory =
+                                selectedCategory === 'Uncategorized'
+                                  ? !expense.category?.trim()
+                                  : expense.category?.trim() === selectedCategory
 
-                      // Sub-subcategory level
-                      goToExpenses(
-                        value,
-                        value === 'Uncategorized'
-                          ? 'sub_subcategory'
-                          : ''
-                      )
-                    }}
-                    formatter={(value) => (
-                      <span
-                        style={{
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {value}
-                      </span>
-                    )}
-                  />
+                              const matchesSubcategory =
+                                expense.subcategory?.trim() === value ||
+                                (
+                                  value === 'Uncategorized' &&
+                                  !expense.subcategory?.trim()
+                                )
+
+                              return (
+                                matchesCategory &&
+                                matchesSubcategory &&
+                                expense.sub_subcategory?.trim()
+                              )
+                            }
+                          )
+
+                          if (!hasSubSubcategory) {
+                            goToExpenses(
+                              value,
+                              value === 'Uncategorized'
+                                ? 'subcategory'
+                                : ''
+                            )
+                            return
+                          }
+
+                          setSelectedSubcategory(value)
+                          return
+                        }
+
+                        // Sub-subcategory level
+                        goToExpenses(
+                          value,
+                          value === 'Uncategorized'
+                            ? 'sub_subcategory'
+                            : ''
+                        )
+                      }}
+                      formatter={(value) => (
+                        <span
+                          style={{
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {value}
+                        </span>
+                      )}
+                    />
+                  )}
                 </PieChart>
 
               </ResponsiveContainer>

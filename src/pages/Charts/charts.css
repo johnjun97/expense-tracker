@@ -179,7 +179,8 @@
 }
 
 @media (max-width: 600px) {
-    .pie-chart svg,
+
+  .pie-chart svg,
   .pie-chart svg *,
   .mobile-category-list,
   .mobile-category-list * {
@@ -213,13 +214,13 @@
   }
 
   .chart-card .recharts-legend-wrapper {
-    display: none;
+    display: none !important;
   }
 
-.charts-summary-title {
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 10px;
-}
+  .charts-summary-title {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+  }
 
 }
