@@ -61,7 +61,7 @@ function Expenses() {
   }
 
   const filteredExpenses = expenses.filter((expense) => {
-    const searchText = search.toLowerCase()
+    const searchText = search.trim().toLowerCase()
 
     const formattedDate = expense.expense_date
       ? formatDate(expense.expense_date)
@@ -114,9 +114,15 @@ function Expenses() {
 
     const matchesCategory =
       !categoryFilter ||
-      (categoryFilter === 'Uncategorized'
-        ? !expense.category?.trim()
-        : expense.category === categoryFilter)
+      (
+        categoryFilter === 'uncategorized_category'
+          ? !expense.category?.trim()
+          : categoryFilter === 'uncategorized_subcategory'
+            ? !expense.subcategory?.trim()
+            : categoryFilter === 'uncategorized_sub_subcategory'
+              ? !expense.sub_subcategory?.trim()
+              : expense.category === categoryFilter
+      )
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -444,6 +450,14 @@ function Expenses() {
             }
           >
             <option value="">All categories</option>
+
+            <option value="uncategorized_subcategory">
+              Uncategorized
+            </option>
+
+            {/* <option value="uncategorized_sub_subcategory">
+    Uncategorized (Sub-subcategory)
+  </option> */}
 
             {categorySuggestions.map((category) => (
               <option key={category} value={category}>
