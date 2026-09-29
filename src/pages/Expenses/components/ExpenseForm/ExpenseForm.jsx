@@ -108,6 +108,7 @@ function ExpenseForm({
         .select('currency')
         .eq('user_id', user.id)
         .not('currency', 'is', null)
+        .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Failed to load currency suggestions:', error)
@@ -117,7 +118,7 @@ function ExpenseForm({
       const uniqueCurrencies = []
       const seen = new Set()
 
-      for (const expense of data) {
+      for (const expense of data || []) {
         const currency = expense.currency?.trim().toUpperCase()
 
         if (!currency || seen.has(currency)) {
@@ -129,6 +130,12 @@ function ExpenseForm({
       }
 
       setCurrencySuggestions(uniqueCurrencies)
+
+      if (data?.length > 0) {
+        setCurrency(data[0].currency?.trim().toUpperCase() || 'MYR')
+      } else {
+        setCurrency('MYR')
+      }
     }
 
     loadCurrencySuggestions()
