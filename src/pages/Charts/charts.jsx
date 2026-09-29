@@ -106,6 +106,11 @@ const renderPieLabel = ({
   }
 
   // Desktop
+  // Desktop: only show labels for slices > 1%
+  if (percentage <= 1) {
+    return null
+  }
+
   const radius = outerRadius + 35
 
   const x =
