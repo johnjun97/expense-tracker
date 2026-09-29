@@ -299,39 +299,39 @@ function Charts() {
     ).sort((a, b) => b.amount - a.amount)
     : []
 
-const subsubcategorySpending = selectedSubcategory
-  ? Object.values(
-    filteredExpenses.reduce((result, expense) => {
-      const matchesCategory =
-        selectedCategory === 'Uncategorized'
-          ? !expense.category?.trim()
-          : expense.category?.trim() === selectedCategory
+  const subsubcategorySpending = selectedSubcategory
+    ? Object.values(
+      filteredExpenses.reduce((result, expense) => {
+        const matchesCategory =
+          selectedCategory === 'Uncategorized'
+            ? !expense.category?.trim()
+            : expense.category?.trim() === selectedCategory
 
-      const matchesSubcategory =
-        selectedSubcategory === 'Uncategorized'
-          ? !expense.subcategory?.trim()
-          : expense.subcategory?.trim() === selectedSubcategory
+        const matchesSubcategory =
+          selectedSubcategory === 'Uncategorized'
+            ? !expense.subcategory?.trim()
+            : expense.subcategory?.trim() === selectedSubcategory
 
-      if (!matchesCategory || !matchesSubcategory) {
-        return result
-      }
-
-      const subsubcategory =
-        expense.sub_subcategory?.trim() || 'Uncategorized'
-
-      if (!result[subsubcategory]) {
-        result[subsubcategory] = {
-          category: subsubcategory,
-          amount: 0,
+        if (!matchesCategory || !matchesSubcategory) {
+          return result
         }
-      }
 
-      result[subsubcategory].amount += Number(expense.amount)
+        const subsubcategory =
+          expense.sub_subcategory?.trim() || 'Uncategorized'
 
-      return result
-    }, {})
-  ).sort((a, b) => b.amount - a.amount)
-  : []
+        if (!result[subsubcategory]) {
+          result[subsubcategory] = {
+            category: subsubcategory,
+            amount: 0,
+          }
+        }
+
+        result[subsubcategory].amount += Number(expense.amount)
+
+        return result
+      }, {})
+    ).sort((a, b) => b.amount - a.amount)
+    : []
 
   // ADD HERE
   const currentChartData =
@@ -657,14 +657,73 @@ const subsubcategorySpending = selectedSubcategory
 
                   <Legend
                     onClick={(data) => {
-                      if (!selectedCategory && data?.value) {
-                        setSelectedCategory(data.value)
+                      if (!data?.value) {
+                        return
                       }
+
+                      const value = data.value
+
+                      // Category level
+                      if (!selectedCategory) {
+                        if (value === 'Uncategorized') {
+                          goToExpenses(value, 'category')
+                          return
+                        }
+
+                        setSelectedCategory(value)
+                        return
+                      }
+
+                      // Subcategory level
+                      if (!selectedSubcategory) {
+                        const hasSubSubcategory = filteredExpenses.some(
+                          (expense) => {
+                            const matchesCategory =
+                              selectedCategory === 'Uncategorized'
+                                ? !expense.category?.trim()
+                                : expense.category?.trim() === selectedCategory
+
+                            const matchesSubcategory =
+                              expense.subcategory?.trim() === value ||
+                              (
+                                value === 'Uncategorized' &&
+                                !expense.subcategory?.trim()
+                              )
+
+                            return (
+                              matchesCategory &&
+                              matchesSubcategory &&
+                              expense.sub_subcategory?.trim()
+                            )
+                          }
+                        )
+
+                        if (!hasSubSubcategory) {
+                          goToExpenses(
+                            value,
+                            value === 'Uncategorized'
+                              ? 'subcategory'
+                              : ''
+                          )
+                          return
+                        }
+
+                        setSelectedSubcategory(value)
+                        return
+                      }
+
+                      // Sub-subcategory level
+                      goToExpenses(
+                        value,
+                        value === 'Uncategorized'
+                          ? 'sub_subcategory'
+                          : ''
+                      )
                     }}
                     formatter={(value) => (
                       <span
                         style={{
-                          cursor: isMobile || selectedCategory ? 'default' : 'pointer',
+                          cursor: 'pointer',
                         }}
                       >
                         {value}
