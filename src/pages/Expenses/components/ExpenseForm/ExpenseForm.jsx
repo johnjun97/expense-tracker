@@ -509,6 +509,7 @@ function ExpenseForm({
               id="subcategory"
               type="text"
               value={subcategory}
+              autoComplete="off"
               onChange={(event) => {
                 setSubcategory(event.target.value)
                 setSubcategoryOpen(true)
