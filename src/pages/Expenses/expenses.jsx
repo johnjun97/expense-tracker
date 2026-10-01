@@ -26,7 +26,7 @@ function Expenses() {
 
   const urlSearch = searchParams.get('search') || ''
   const urlLevel = searchParams.get('level') || ''
-  const urlDate = searchParams.get('date') || ''
+  const urlDate = searchParams.get('date') || 'today'
   const urlFrom = searchParams.get('from') || ''
   const urlTo = searchParams.get('to') || ''
 
@@ -340,10 +340,9 @@ function Expenses() {
 
     const params = new URLSearchParams(searchParams)
 
-    if (value) {
-      params.set('date', value)
-    } else {
-      params.delete('date')
+    params.set('date', value)
+
+    if (value !== 'custom') {
       params.delete('from')
       params.delete('to')
 
@@ -433,7 +432,7 @@ function Expenses() {
               handleDateFilterChange(event.target.value)
             }
           >
-            <option value="">All dates</option>
+            <option value="all">All dates</option>
             <option value="today">Today</option>
             <option value="yesterday">Yesterday</option>
             <option value="this_week">This week</option>
