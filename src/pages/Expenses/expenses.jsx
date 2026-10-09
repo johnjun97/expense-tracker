@@ -26,7 +26,8 @@ function Expenses() {
 
   const urlSearch = searchParams.get('search') || ''
   const urlLevel = searchParams.get('level') || ''
-  const urlDate = searchParams.get('date') || 'today'
+  const urlDate = searchParams.get('date') ||
+    (searchParams.has('level') ? 'all' : 'today')
   const urlFrom = searchParams.get('from') || ''
   const urlTo = searchParams.get('to') || ''
 
@@ -152,57 +153,61 @@ function Expenses() {
 
     let matchesDate = true
 
-    if (dateFilter === 'today') {
-      matchesDate =
-        expenseDate.getTime() === today.getTime()
-    }
+    // When navigating from the chart, use its selected date/month.
+    if (urlLevel !== 'date' && urlLevel !== 'month') {
 
-    if (dateFilter === 'yesterday') {
-      matchesDate =
-        expenseDate.getTime() === yesterday.getTime()
-    }
-
-    if (dateFilter === 'this_week') {
-      matchesDate =
-        expenseDate >= startOfWeek &&
-        expenseDate <= today
-    }
-
-    if (dateFilter === 'this_month') {
-      matchesDate =
-        expenseDate.getFullYear() === today.getFullYear() &&
-        expenseDate.getMonth() === today.getMonth()
-    }
-
-    if (dateFilter === 'this_year') {
-      matchesDate =
-        expenseDate.getFullYear() === today.getFullYear()
-    }
-
-    if (dateFilter === 'last_year') {
-      matchesDate =
-        expenseDate.getFullYear() === today.getFullYear() - 1
-    }
-
-    if (dateFilter === 'custom') {
-      if (fromDate) {
-        const selectedFromDate = new Date(
-          `${fromDate}T00:00:00`
-        )
-
+      if (dateFilter === 'today') {
         matchesDate =
-          matchesDate &&
-          expenseDate >= selectedFromDate
+          expenseDate.getTime() === today.getTime()
       }
 
-      if (toDate) {
-        const selectedToDate = new Date(
-          `${toDate}T00:00:00`
-        )
-
+      if (dateFilter === 'yesterday') {
         matchesDate =
-          matchesDate &&
-          expenseDate <= selectedToDate
+          expenseDate.getTime() === yesterday.getTime()
+      }
+
+      if (dateFilter === 'this_week') {
+        matchesDate =
+          expenseDate >= startOfWeek &&
+          expenseDate <= today
+      }
+
+      if (dateFilter === 'this_month') {
+        matchesDate =
+          expenseDate.getFullYear() === today.getFullYear() &&
+          expenseDate.getMonth() === today.getMonth()
+      }
+
+      if (dateFilter === 'this_year') {
+        matchesDate =
+          expenseDate.getFullYear() === today.getFullYear()
+      }
+
+      if (dateFilter === 'last_year') {
+        matchesDate =
+          expenseDate.getFullYear() === today.getFullYear() - 1
+      }
+
+      if (dateFilter === 'custom') {
+        if (fromDate) {
+          const selectedFromDate = new Date(
+            `${fromDate}T00:00:00`
+          )
+
+          matchesDate =
+            matchesDate &&
+            expenseDate >= selectedFromDate
+        }
+
+        if (toDate) {
+          const selectedToDate = new Date(
+            `${toDate}T00:00:00`
+          )
+
+          matchesDate =
+            matchesDate &&
+            expenseDate <= selectedToDate
+        }
       }
     }
 
@@ -217,9 +222,22 @@ function Expenses() {
         .order('expense_date', { ascending: false })
         .order('created_at', { ascending: false })
 
-      // When coming from Charts with a search,
-      // load all records so older matching records are not missed.
-      if (!urlSearch) {
+      // Load expenses for the selected custom date range.
+      const hasCustomRange =
+        urlDate === 'custom' && Boolean(urlFrom || urlTo)
+
+      if (urlDate === 'custom') {
+        if (urlFrom) {
+          query = query.gte('expense_date', urlFrom)
+        }
+
+        if (urlTo) {
+          query = query.lte('expense_date', urlTo)
+        }
+      }
+
+      // Keep normal pagination when not searching or using a custom range.
+      if (!urlSearch && !hasCustomRange) {
         query = query.range(0, PAGE_SIZE - 1)
       }
 
@@ -234,7 +252,11 @@ function Expenses() {
 
       setExpenses(data)
 
-      setHasMore(!urlSearch && data.length === PAGE_SIZE)
+      setHasMore(
+        !urlSearch &&
+        !hasCustomRange &&
+        data.length === PAGE_SIZE
+      )
 
       const uniqueCategories = []
       const seen = new Set()
@@ -261,7 +283,7 @@ function Expenses() {
     }
 
     loadExpenses()
-  }, [urlSearch])
+  }, [urlSearch, urlDate, urlFrom, urlTo])
 
   async function loadMoreExpenses() {
     if (loadingMoreRef.current || !hasMore) {

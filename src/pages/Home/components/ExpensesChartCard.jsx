@@ -547,9 +547,9 @@ function ExpensesChartCard() {
                                             ? 'month'
                                             : 'date'
 
-                                        navigate(
-                                            `/expenses?search=${encodeURIComponent(data.date)}&level=${level}`
-                                        )
+                              navigate(
+    `/expenses?date=custom&from=${data.date}&to=${data.date}`
+)
                                     }}
                                 >
                                     {chartData.map(
