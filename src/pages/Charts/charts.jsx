@@ -178,17 +178,43 @@ function Charts() {
   const [selectedSubcategory, setSelectedSubcategory] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600)
 
-  function goToExpenses(search, level = '') {
-    const params = new URLSearchParams()
 
-    params.set('search', search)
+function goToExpenses(search, level = '') {
+  const params = new URLSearchParams()
 
-    if (level) {
-      params.set('level', level)
-    }
+  params.set('search', search)
 
-    navigate(`/expenses?${params.toString()}`)
+  if (level) {
+    params.set('level', level)
   }
+
+  // Preserve the chart's selected year and month.
+  if (selectedYear && selectedMonth) {
+    const lastDay = new Date(
+      Number(selectedYear),
+      Number(selectedMonth),
+      0
+    ).getDate()
+
+    params.set('date', 'custom')
+    params.set('from', `${selectedYear}-${selectedMonth}-01`)
+    params.set(
+      'to',
+      `${selectedYear}-${selectedMonth}-${String(lastDay).padStart(2, '0')}`
+    )
+  } else if (selectedYear) {
+    params.set('date', 'custom')
+    params.set('from', `${selectedYear}-01-01`)
+    params.set('to', `${selectedYear}-12-31`)
+  } else if (selectedMonth) {
+    // A month selected without a year means that month across all years.
+    params.set('searchMonth', selectedMonth)
+  } else {
+    params.set('date', 'all')
+  }
+
+  navigate(`/expenses?${params.toString()}`)
+}
 
   useEffect(() => {
     const handleResize = () => {

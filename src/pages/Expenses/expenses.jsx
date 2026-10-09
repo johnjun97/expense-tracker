@@ -26,10 +26,16 @@ function Expenses() {
 
   const urlSearch = searchParams.get('search') || ''
   const urlLevel = searchParams.get('level') || ''
-  const urlDate = searchParams.get('date') ||
-    (searchParams.has('level') ? 'all' : 'today')
+
+  const urlDate =
+    searchParams.get('date') ||
+    (searchParams.has('search') || searchParams.has('level')
+      ? 'all'
+      : 'today')
+
   const urlFrom = searchParams.get('from') || ''
   const urlTo = searchParams.get('to') || ''
+  const urlSearchMonth = searchParams.get('searchMonth') || ''
 
   const [search, setSearch] = useState(urlSearch)
   const [dateFilter, setDateFilter] = useState(urlDate)
@@ -211,7 +217,16 @@ function Expenses() {
       }
     }
 
-    return matchesSearch && matchesCategory && matchesDate
+    const matchesChartMonth =
+      !urlSearchMonth ||
+      expense.expense_date?.slice(5, 7) === urlSearchMonth
+
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesDate &&
+      matchesChartMonth
+    )
   })
 
   useEffect(() => {
@@ -283,10 +298,19 @@ function Expenses() {
     }
 
     loadExpenses()
-  }, [urlSearch, urlDate, urlFrom, urlTo])
+  }, [urlSearch, urlDate, urlFrom, urlTo, urlSearchMonth])
 
   async function loadMoreExpenses() {
-    if (loadingMoreRef.current || !hasMore) {
+    const hasCustomRange =
+      urlDate === 'custom' && Boolean(urlFrom || urlTo)
+
+    if (
+      loadingMoreRef.current ||
+      !hasMore ||
+      urlSearch ||
+      urlSearchMonth ||
+      hasCustomRange
+    ) {
       return
     }
 
@@ -363,6 +387,9 @@ function Expenses() {
     const params = new URLSearchParams(searchParams)
 
     params.set('date', value)
+    params.delete('search')
+    params.delete('level')
+    params.delete('searchMonth')
 
     if (value !== 'custom') {
       params.delete('from')
